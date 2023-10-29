@@ -162,8 +162,6 @@ data_outliers <- data_trial_count %>% filter(trial_count != 82)
 data_amp_trials <- data_amp_raw %>%
   mutate(practice_exclusion = ifelse(blockcode == "practice", "exclude", "include")) %>% mutate(instruction_exclusion= ifelse(trialcode == "instructions", "exclude", "include"))
 
-#there is also an instruction line --> I leave this one in as it is important to know whether a certain participant was presented with instructions or not --> if not presented it could affect the testing so it is part of the overall structure
-
 #In order to explore the data we will still use the raw dataset since we want to figure out the correct number of trials, so the practice data can be useful in order to see what is a "normal" number of trials. We compare the overall results with the data_amp_trials ones so we have a better understanding 
 
 
@@ -172,7 +170,7 @@ data_amp_trials_excluded <- data_amp_trials %>%
   filter (instruction_exclusion == "include")
 
 
-excluded_data_trial_count <- data_amp_trials %>%
+excluded_data_trial_count <- data_amp_trials_excluded %>%
  group_by(subject) %>%
  summarise(trial_count = n())
 
@@ -192,7 +190,7 @@ excluded_data_outliers <- excluded_data_trial_count %>% filter(trial_count != 72
 #here we insert a new column based on the total of trials and a new column based on whether to exclude or include them
 
 data_amp_processed <- data_amp_trials %>%
-  left_join(excluded_data_trial_count, by = "subject") %>% mutate(exclude_outliers = ifelse(trial_count == 72, "include", "exclude")) 
+  left_join(excluded_data_trial_count, by = "subject") %>% mutate(exclude_outliers = ifelse(trial_count == 82, "include", "exclude")) 
 
 
 

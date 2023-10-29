@@ -160,8 +160,7 @@ data_outliers <- data_trial_count %>% filter(trial_count != 82)
 
 #By taking a closer look at the data_amp_raw we see that there is still people with a practice blockcode that we might not want to have in our final dataset so we flag them with exclude include as before: 
 data_amp_trials <- data_amp_raw %>%
-  mutate(practice_exclusion = ifelse(blockcode == "practice", "exclude", "include"))
-
+  mutate(practice_exclusion = ifelse(blockcode == "practice", "exclude", "include")) %>% mutate(instruction_exclusion= ifelse(trialcode == "instructions", "exclude", "include"))
 
 #there is also an instruction line --> I leave this one in as it is important to know whether a certain participant was presented with instructions or not --> if not presented it could affect the testing so it is part of the overall structure
 
@@ -169,10 +168,11 @@ data_amp_trials <- data_amp_raw %>%
 
 
 data_amp_trials_excluded <- data_amp_trials %>% 
-  filter(practice_exclusion == "include")
+  filter(practice_exclusion == "include") %>% 
+  filter (instruction_exclusion == "include")
 
 
-excluded_data_trial_count <- data_amp_trials_excluded %>%
+excluded_data_trial_count <- data_amp_trials %>%
  group_by(subject) %>%
  summarise(trial_count = n())
 

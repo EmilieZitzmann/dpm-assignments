@@ -162,7 +162,8 @@ data_outliers <- data_trial_count %>% filter(trial_count != 82)
 data_amp_trials <- data_amp_raw %>%
   mutate(practice_exclusion = ifelse(blockcode == "practice", "exclude", "include")) %>% mutate(instruction_exclusion= ifelse(trialcode == "instructions", "exclude", "include"))
 
-#In order to explore the data we will still use the raw dataset since we want to figure out the correct number of trials, so the practice data can be useful in order to see what is a "normal" number of trials. We compare the overall results with the data_amp_trials ones so we have a better understanding 
+
+#compare the datasets without instructions and practice
 
 
 data_amp_trials_excluded <- data_amp_trials %>% 
@@ -173,24 +174,23 @@ data_amp_trials_excluded <- data_amp_trials %>%
 excluded_data_trial_count <- data_amp_trials_excluded %>%
  group_by(subject) %>%
  summarise(trial_count = n())
+# we see that by this step there are already 2 outliers excluded second it becomes apparent that there seems to be 10 practice trials for each individual, when excluding them there is a total of 72 trials
 
-# it becomes apparent that there seems to be 10 practice trials for each individual, when excluding them there is a total of 72 
 
-
-excluded_data_trial_count %>% count(trial_count == 72) %>% kable() %>% 
+excluded_data_trial_count %>% count(trial_count != 72) %>% kable() %>% 
               kable_classic(full_width = F)
 
 
 excluded_data_outliers <- excluded_data_trial_count %>% filter(trial_count != 72)
 
-#By comparing the two datasets we see that the same numbers of subjects have these issues so let's put the ones to an exclude. Since they are strong outliers (their trialnumber is not even close to 72 or 82) it does not really make sense to conduct a further analysis where we allow a certain percentage of deviation. 
-#By looking at the subjects (893377996, 548957868, 504546409 , 246532124) we can see that person 246532124 almost completed the test twice whereas  893377996, 548957868 only completed the instructions and some practice trials. Subject 504546409 might have stopped at the beginning since it completed very little test trials. 
+#By comparing the two datasets we see that the same numbers of subjects have issues (from the second dataset with practice and instructions dropped there is only two but the same two are in the other dataset).Since they are strong outliers (their trialnumber is not even close to 72 or 82) it does not really make sense to conduct a further analysis where we allow a certain percentage of deviation. 
+#By looking at the subjects (893377996, 548957868, 504546409 , 246532124) we can see that person 246532124 almost completed the test twice whereas  893377996, 548957868 only completed the instructions and some practice trials (they are excluded in the second dataset). Subject 504546409 might have stopped at the beginning since it completed very little test trials. 
 
 
 #here we insert a new column based on the total of trials and a new column based on whether to exclude or include them
 
 data_amp_processed <- data_amp_trials %>%
-  left_join(excluded_data_trial_count, by = "subject") %>% mutate(exclude_outliers = ifelse(trial_count == 82, "include", "exclude")) 
+  left_join(data_trial_count, by = "subject") %>% mutate(exclude_outliers = ifelse(trial_count == 82, "include", "exclude")) 
 
 
 

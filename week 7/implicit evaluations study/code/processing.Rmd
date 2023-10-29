@@ -1,7 +1,7 @@
 ---
 title: "Evaluations of positive and negative stimuli using the Affective Misattribution Procedure (AMP) and self-reports"
 subtitle: "Data processing"
-author: "Template: Ian Hussey; content: [Student name]"
+author: "Template: Ian Hussey; content: Emilie"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
@@ -32,32 +32,33 @@ library(stringr)
 # Get data
 
 ```{r}
-
 # demographics
-data_demographics_raw <- read_csv("../../../data/AMP study/raw/data_demographics_raw.csv") |>
+data_demographics_raw <- read_csv("../data/raw/data_demographics_raw.csv") %>% 
   janitor::clean_names()
 
 # data_demographics_raw_messy <- read_csv("../../../data/AMP study/raw/data_demographics_raw_messy.csv", skip = 2) |>
 #   janitor::clean_names()
 
 # self report measure
-data_selfreport_raw <- read_csv("../../../data/AMP study/raw/data_selfreport_raw.csv") |>
+data_selfreport_raw <- read_csv("../data/raw/data_selfreport_raw.csv") %>% 
   janitor::clean_names()
 
 # affect attribution procedure
-data_amp_raw <- read_csv("../../../data/AMP study/raw/data_amp_raw.csv") |>
+data_amp_raw <- read_csv("../data/raw/data_amp_raw.csv") %>% 
   janitor::clean_names()
-
 ```
+
+
 
 # Demographics
 
 ```{r}
+#Cleaning up the demographics section --> putting them all to the same definition, age should be a number etc.
 
-dat_age_gender <- data_demographics_raw |>
-  select(subject, date, time, trialcode, response) |>
+dat_age_gender <- data_demographics_raw %>% 
+  select(subject, date, time, trialcode, response) %>% 
   pivot_wider(names_from = trialcode,
-              values_from = response) |>
+              values_from = response) %>% 
   mutate(gender = tolower(gender),
          gender = stringr::str_remove_all(gender, regex("\\W+")), # regex is both very useful and awful to write
          gender = case_when(gender == "female" ~ gender,
@@ -77,12 +78,14 @@ dat_age_gender <- data_demographics_raw |>
 
 ```{r}
 
-data_amp_performance_criteria <- data_amp_raw |> 
+#Here we filter out practice and instructions then we mutate a new column where we make sure whether participants should be included or excluded based on their latency (Last weeks assignment)
+
+data_amp_performance_criteria <- data_amp_raw %>%  
   filter(blockcode != "practice", 
-         trialcode != "instructions") |> 
-  mutate(latency_prob = if_else(latency < 100, TRUE, FALSE)) |> 
-  group_by(subject) |> 
-  summarize(proportion_fast_trials_amp = mean(latency_prob)) |>
+         trialcode != "instructions") %>% 
+  mutate(latency_prob = if_else(latency < 100, TRUE, FALSE)) %>%  
+  group_by(subject) %>% 
+  summarize(proportion_fast_trials_amp = mean(latency_prob)) %>% 
   mutate(exclude_amp_performance = ifelse(proportion_fast_trials_amp > 0.10, "exclude", "include"))
 
 ```
@@ -91,30 +94,111 @@ data_amp_performance_criteria <- data_amp_raw |>
 
 ```{r}
 
+
 # trial level data
-data_selfreport_trial_level <- data_selfreport_raw |>
-  select(subject, trialcode, response) |>
-  filter(trialcode %in% c("like", "prefer", "positive")) |>
-  rename(item = trialcode) |>
-  filter(response != "Ctrl+'B'") |>
+## here we exclude the responses in trialcode that do not make any sense and specify that they should be numeric
+data_selfreport_trial_level <- data_selfreport_raw %>% 
+  select(subject, trialcode, response) %>% 
+  filter(trialcode %in% c("like", "prefer", "positive")) %>% 
+  rename(item = trialcode) %>% 
+  filter(response != "Ctrl+'B'") %>% 
   mutate(response = as.numeric(response))
 
 # mean scored
-data_selfreport_mean_score <- data_selfreport_trial_level |>
-  group_by(subject) |>
+##here we create a mean score from the responses in trialcode (prefer etc. I guess)
+data_selfreport_mean_score <- data_selfreport_trial_level %>% 
+  group_by(subject) %>% 
   summarize(mean_evaluation = mean(response, na.rm = TRUE))
+
 
 # combined
 data_selfreport_scored <- 
-  full_join(data_selfreport_trial_level |>
+  full_join(data_selfreport_trial_level %>% 
               pivot_wider(names_from = "item",
                           values_from = "response"),
             data_selfreport_mean_score,
             by = "subject")
 
+
 ```
 
+
 # Affect Misattribution Procedure
+
+##Assignment Week 7 Part 2 
+
+- Add exclusions for the AMP task. It should have the "correct" number of trials. How to know what number is the correct number of trials? Think about how to explore this in your data with code. Write a very brief description of what you tried, what worked or didn't, and what you decided was the correct number of trials as a response to this assignment. 
+
+
+```{r}
+
+#First we check what most participants have as a total of trials: The code above is a count of how many trials each subject participated in --> this equals the total "number of trials"
+
+data_trial_count <- data_amp_raw %>%
+ group_by(subject) %>%
+ summarise(trial_count = n())
+
+
+#we can see that the overall count in the data seems to be 82 so we can make an overwiev of how many people do actually have 82 as a normal count
+data_trial_count %>% count(trial_count == 82) %>% kable() %>% 
+              kable_classic(full_width = F)
+
+# we can see that this is the case for 98 People and 4 do not have 82 which equals a total number of participants from 102 so we will just quickly check whether this is true 
+
+data_sample <- data_amp_raw[!duplicated(data_amp_raw$subject), ]
+count(data_sample) %>% kable() %>% kable_classic(full_width = F) 
+
+#we can see that we have a total of 102 participants so our table is right.
+
+#Let's take a closer look at the participants that do not have 82 
+
+data_outliers <- data_trial_count %>% filter(trial_count != 82)
+
+#Before conducting any further analysis consider the below: 
+
+#############################
+
+#By taking a closer look at the data_amp_raw we see that there is still people with a practice blockcode that we might not want to have in our final dataset so we flag them with exclude include as before: 
+data_amp_trials <- data_amp_raw %>%
+  mutate(practice_exclusion = ifelse(blockcode == "practice", "exclude", "include"))
+
+
+#there is also an instruction line --> I leave this one in as it is important to know whether a certain participant was presented with instructions or not --> if not presented it could affect the testing so it is part of the overall structure
+
+#In order to explore the data we will still use the raw dataset since we want to figure out the correct number of trials, so the practice data can be useful in order to see what is a "normal" number of trials. We compare the overall results with the data_amp_trials ones so we have a better understanding 
+
+
+data_amp_trials_excluded <- data_amp_trials %>% 
+  filter(practice_exclusion == "include")
+
+
+excluded_data_trial_count <- data_amp_trials_excluded %>%
+ group_by(subject) %>%
+ summarise(trial_count = n())
+
+# it becomes apparent that there seems to be 10 practice trials for each individual, when excluding them there is a total of 72 
+
+
+excluded_data_trial_count %>% count(trial_count == 72) %>% kable() %>% 
+              kable_classic(full_width = F)
+
+
+excluded_data_outliers <- excluded_data_trial_count %>% filter(trial_count != 72)
+
+#By comparing the two datasets we see that the same numbers of subjects have these issues so let's put the ones to an exclude. Since they are strong outliers (their trialnumber is not even close to 72 or 82) it does not really make sense to conduct a further analysis where we allow a certain percentage of deviation. 
+#By looking at the subjects (893377996, 548957868, 504546409 , 246532124) we can see that person 246532124 almost completed the test twice whereas  893377996, 548957868 only completed the instructions and some practice trials. Subject 504546409 might have stopped at the beginning since it completed very little test trials. 
+
+
+#here we insert a new column based on the total of trials and a new column based on whether to exclude or include them
+
+data_amp_processed <- data_amp_trials %>%
+  left_join(excluded_data_trial_count, by = "subject") %>% mutate(exclude_outliers = ifelse(trial_count == 72, "include", "exclude")) 
+
+
+
+
+
+```
 
 TODO extract evaluations on the AMP test blocks and convert to an overall bias score
 
@@ -128,20 +212,38 @@ TODO extract evaluations on the AMP test blocks and convert to an overall bias s
 ```{r}
 
 # combine all dfs created in the previous chunks
-data_processed_temp <- dat_age_gender |>
-  full_join(data_selfreport_scored, by = "subject") |> 
+data_processed_temp <- dat_age_gender %>% 
+  full_join(data_selfreport_scored, by = "subject")  %>% 
   full_join(data_amp_performance_criteria, by = "subject")
 
 # flag all subjects with more than one row in the wide-format data. these should be excluded in the analysis.
-# a more elaborate approach would be to track down the individual dupicate cases and determine which of the mulitiple cases should be retained. 
-data_processed_duplicates <- data_processed_temp |>
-  count(subject) |>
-  mutate(exclude_duplicate_data = if_else(n > 1, "exclude", "include")) |>
+# a more elaborate approach would be to track down the individual duplicate cases and determine which of the mulitiple cases should be retained. 
+data_processed_duplicates <- data_processed_temp  %>%
+  count(subject)  %>%
+  mutate(exclude_duplicate_data = if_else(n > 1, "exclude", "include"))  %>%
   select(-n)
 
+
 # join in the duplicates df
-data_processed_before_exclusions <- data_processed_temp |>
-  full_join(data_processed_duplicates, by = "subject")
+data_processed_before_exclusions <- data_processed_temp  %>%
+  full_join(data_processed_duplicates, by = "subject") 
+
+
+# Assignment week 7: Flag all the subjects with one NA in their self reports 
+
+##we have to put in a select because otherwhise it will be difficult with the full join (creating an age.x and age.y for example)
+
+data_selfreport_exclusion <- data_processed %>% select(subject, prefer, positive, like) %>% 
+  mutate(exclude_self_report = ifelse(is.na(like) | is.na(positive) | is.na(prefer), "exclude", "include"))
+
+
+#now join the selfreports exclusions to the dataset as well, in order to be able to have the same code downwards we will keep the name 
+
+data_processed_before_exclusions <- data_processed_temp %>%
+  full_join(data_processed_duplicates, by = "subject") %>%
+  full_join(data_selfreport_exclusion, by = "subject") %>% 
+    select(-ends_with(".y")) #we select this so therefore it will not create the multiple columns while joining
+
 
 ```
 
@@ -150,7 +252,7 @@ data_processed_before_exclusions <- data_processed_temp |>
 ```{r}
 
 # create a master exclude_participant variable
-data_processed <- data_processed_before_exclusions |>
+data_processed <- data_processed_before_exclusions %>% 
   mutate(exclude_participant = case_when(tolower(age) == "test" ~ "exclude",
                                          tolower(gender) == "test" ~ "exclude",
                                          is.na(mean_evaluation) ~ "exclude",
@@ -161,19 +263,24 @@ data_processed <- data_processed_before_exclusions |>
                                          is.na(gender) ~ "exclude",
                                          exclude_amp_performance == "exclude" ~ "exclude",
                                          exclude_duplicate_data == "exclude" ~ "exclude",
+                                         exclude_self_report == "exclude" ~ "exclude", #Assignment week 7
                                          TRUE ~ "include"))
 
+
 ```
+
+
 
 # Write to disk
 
 ```{r}
 
 # in case this dir doesn't exist, create it
-dir.create("../../../data/AMP study/processed/")
+dir.create("../data/processed/")
 
 # save data to disk in that dir
-write_csv(data_processed, "../../../data/AMP study/processed/data_processed.csv")
+write_csv(data_processed, "../data/processed/data_processed.csv")
+
 
 ```
 

@@ -136,7 +136,7 @@ data_selfreport_scored <-
 
 data_trial_count <- data_amp_raw %>%
  group_by(subject) %>%
- summarise(trial_count = n())
+ summarise(trial_count = n()) #we could juste use count here since summarise(n=n) is the same as count
 
 
 #we can see that the overall count in the data seems to be 82 so we can make an overwiev of how many people do actually have 82 as a normal count

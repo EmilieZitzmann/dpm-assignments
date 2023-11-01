@@ -42,7 +42,7 @@ Load the processed data and apply the global exclusions.
 
 data_processed <- read_csv("../data/processed/data_processed.csv")
 
-data_processed_after_exclusions <- data_processed |>
+data_processed_after_exclusions <- data_processed %>% 
   filter(exclude_participant == "include")
 
 ```
@@ -53,10 +53,10 @@ data_processed_after_exclusions <- data_processed |>
 
 ```{r}
 
-data_processed |>
-  count(name = "n") |>
-  kable() |>
-  add_header_above(header = c("Whole sample" = 1)) |> # note that you can add header rows to tables like this. The "1" indicates the number of columns the header should span. The sum of these numbers must equal the number of columns or you'll get an error.
+data_processed %>% 
+  count(name = "n") %>% 
+  kable() %>% 
+  add_header_above(header = c("Whole sample" = 1)) %>%  # note that you can add header rows to tables like this. The "1" indicates the number of columns the header should span. The sum of these numbers must equal the number of columns or you'll get an error.
   kable_classic(full_width = FALSE)
 
 ```
@@ -67,10 +67,10 @@ Sample used in subsequent analyses
 
 ```{r}
 
-data_processed_after_exclusions |>
-  count(name = "n") |>
-  kable() |>
-  add_header_above(header = c("For analysis" = 1)) |>
+data_processed_after_exclusions %>% 
+  count(name = "n") %>% 
+  kable() %>% 
+  add_header_above(header = c("For analysis" = 1)) %>% 
   kable_classic(full_width = FALSE)
 
 ```
@@ -79,13 +79,13 @@ data_processed_after_exclusions |>
 
 ```{r}
 
-data_processed_after_exclusions |>
-  mutate(age = as.numeric(age)) |>
+data_processed_after_exclusions %>% 
+  mutate(age = as.numeric(age)) %>% 
   summarise(Mean = mean(age, na.rm = TRUE),
-            SD = sd(age, na.rm = TRUE)) |>
-  mutate_all(.funs = janitor::round_half_up, digits = 1) |>
-  kable() |>
-  add_header_above(header = c("Age" = 2)) |>
+            SD = sd(age, na.rm = TRUE)) %>% 
+  mutate_all(.funs = janitor::round_half_up, digits = 1) %>% 
+  kable() %>% 
+  add_header_above(header = c("Age" = 2)) %>% 
   kable_classic(full_width = FALSE)
 
 ```
@@ -94,13 +94,13 @@ data_processed_after_exclusions |>
 
 ```{r}
 
-data_processed_after_exclusions |> 
-  rename(Gender = gender) |>
-  group_by(Gender) |> 
-  summarise(n = n()) |> 
-  mutate(Percent = paste0(round_half_up((n / sum(n)) * 100, 1), "%")) |>
-  mutate(Gender = stringr::str_to_sentence(Gender)) |> # Change the case of the Gender variable so that it prints nicely
-  kable() |>
+data_processed_after_exclusions %>% 
+  rename(Gender = gender) %>% 
+  group_by(Gender) %>% 
+  summarise(n = n()) %>%  
+  mutate(Percent = paste0(round_half_up((n / sum(n)) * 100, 1), "%")) %>% 
+  mutate(Gender = stringr::str_to_sentence(Gender)) %>%  # Change the case of the Gender variable so that it prints nicely
+  kable() %>% 
   kable_classic(full_width = FALSE)
 
 ```
@@ -116,25 +116,25 @@ Descriptive statistics and plots of the measures (excluding the demographics var
 ```{r}
 
 # overall self-reported evaluations
-dat_mean_ratings <- data_processed_after_exclusions |>
+dat_mean_ratings <- data_processed_after_exclusions %>% 
   summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
-            SD = sd(mean_evaluation, na.rm = TRUE)) |>
+            SD = sd(mean_evaluation, na.rm = TRUE)) %>% 
   mutate(group = "Full sample")
 
 # self-reported evaluations by gender category
-dat_mean_ratings_by_gender <- data_processed_after_exclusions |>
-  group_by(group = gender) |>
+dat_mean_ratings_by_gender <- data_processed_after_exclusions %>% 
+  group_by(group = gender) %>% 
   summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
             SD = sd(mean_evaluation, na.rm = TRUE))
 
 # combine both into one table
 bind_rows(dat_mean_ratings,
-          dat_mean_ratings_by_gender) |>
-  select(Subset = group, Mean, SD) |> # select variables of interest, and rename one 
-  mutate(Subset = stringr::str_to_sentence(Subset)) |> # Change the case of the Subset variable so that it prints nicely
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  add_header_above(header = c(" " = 1, "Self-reported evaluations" = 2)) |>
+          dat_mean_ratings_by_gender) %>% 
+  select(Subset = group, Mean, SD) %>%  # select variables of interest, and rename one 
+  mutate(Subset = stringr::str_to_sentence(Subset)) %>%  # Change the case of the Subset variable so that it prints nicely
+  mutate_if(is.numeric, round_half_up, digits = 2) %>% 
+  kable() %>% 
+  add_header_above(header = c(" " = 1, "Self-reported evaluations" = 2)) %>% 
   kable_classic(full_width = FALSE)
 
 ```
@@ -155,6 +155,15 @@ TODO add descriptive plots for self-reported evaluations
 TODO add descriptive stats for AMP
 
 ```{r}
+
+#Calculate the mean amp score for women and men 
+
+#TODO: probably conduct the dataset aside and not within the code directly 
+data_descriptives_amp <- dat_age_gender %>% 
+  full_join(data_prob_correct, by="subject") %>% 
+  group_by(group = gender) %>% 
+  summarise(Mean = mean(amp_score, na.rm = TRUE),
+            SD = sd(amp_score, na.rm = TRUE)) %>% na.omit()
 
 
 ```

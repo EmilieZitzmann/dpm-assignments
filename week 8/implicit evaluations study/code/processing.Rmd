@@ -26,6 +26,7 @@ knitr::opts_chunk$set(message = FALSE,
 library(tidyverse)
 library(janitor) # for clean_names()
 library(stringr)
+library(knitr)
 
 ```
 
@@ -146,8 +147,95 @@ data_correct_trials <- data_amp_raw %>%
                                       (trialcode == "prime_negative" &
                                          correct == 0)~ "congruent", 
                                       TRUE ~"incongruent"))
-#figure out sanity checks that this is true --> up to three solutions (one is before summarize insert something)
 
+
+#Create the amp_score variable: 
+
+data_prob_correct <- data_correct_trials %>% 
+                         group_by(subject) %>% 
+                         summarize(amp_score = mean(prime_congruency == "congruent"))
+
+                        
+########Sanity Checks 
+
+# 1.visual inspection
+
+#we check whether the values we calculated are correct by picking a random subject out of the dataset and calculate the amp_score ourselves. We picked out individual 504546409 --> in the data correct trials we are able to see that the subject has 3 congruent trials out of 8
+
+3/8
+
+#--> 3/8 = 0.375 
+
+
+#Now we calculate the whole thing with our code conducted before (the summarize part is the same as for our code above)
+person_check <- data_correct_trials %>% 
+  filter(subject == "504546409") %>% 
+  summarize(amp_score = mean(prime_congruency == "congruent"))
+#The value equals the same as the manual calculation --> we calculated the correct thing 
+
+
+# 2. Sanity Check: 
+#Do the proportions of congruent and incongruent trials sum up to one? 
+
+#First we check the overall percentage and if the congruent and incongruent trials sum up to 1 --> this is the case (Note that you need janitor:: for tably function)
+data_san_check_2 <- data_correct_trials %>% 
+    select("prime_congruency") %>%
+    na.omit(T) %>% 
+    tabyl(prime_congruency) %>% 
+    adorn_pct_formatting(digits = 2)
+
+#now we take a closer look at the dataset, in order to do so we first conduct a new df with the proportion of incorrect trials 
+
+data_prob_incorrect <- data_correct_trials %>% 
+  group_by(subject) %>%
+  summarize(amp_score = mean(prime_congruency == "incongruent"))
+
+sanity_check_2 <- data_prob_correct %>% 
+   full_join(data_prob_incorrect,by="subject") %>% 
+   mutate(check2 = amp_score.x + amp_score.y) %>% 
+  mutate(not_true = ifelse (check2 != 1, "exclude", "include"))
+
+#We conducted a variable that flags all the combined proportion sums to "exclude" who do not equal 1. With this dataset (since it has only 100 participants) we can see by comparing the 2 datasets, that this is never the case. If the dataset is bigger we can use count or kable in order to check, or we can directly conduct a table using tabyl again:
+
+
+data_test_san_2 <- sanity_check_2%>% 
+    select("not_true") %>%
+    na.omit(T) %>% 
+    tabyl(not_true) %>% 
+    adorn_pct_formatting(digits = 2)
+
+#Thereby we see that all of the participants should be included since their incongruency and congruency sum equals 1 
+
+
+#sanity check 3: 
+#Logical Inspection: Is our code of prime congruency correct? Do all of our variables match each other (prime positive is correct and congruent?). 
+
+# in order to check if all conditions match each other we created another variable. If something would be incongruent here we would have made a mistake before so it is really important, that we have no errors within all of these variables. 
+
+sanity_check_3 <- data_correct_trials %>% 
+  mutate(check3 = case_when((trialcode == "prime_positive" & 
+                               correct == 1 &
+                               prime_congruency == "congruent") |
+                              (trialcode == "prime_negative" &
+                                 correct == 0 &
+                                 prime_congruency == "congruent")|
+                              (trialcode == "prime_positive" &
+                                 correct == 0 &
+                                 prime_congruency == "incongruent") |
+                              (trialcode == "prime_negative" &
+                                 correct == 1 &
+                                 prime_congruency == "incongruent")~ "yes",
+                            TRUE ~"no"))
+
+
+#Table in order to see if we have no
+data_test_san_3 <- sanity_check_3%>% 
+    select("check3") %>%
+    na.omit(T) %>% 
+    tabyl(check3) %>% 
+    adorn_pct_formatting(digits = 2)
+
+# we can see that all variables match each other and we have a total of 100% "yes"
 
 
 

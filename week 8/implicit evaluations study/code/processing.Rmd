@@ -269,7 +269,7 @@ data_processed_before_exclusions <- data_processed_temp %>%
 ```{r}
 
 # create a master exclude_participant variable
-data_processed <- data_processed_before_exclusions |>
+data_processed <- data_processed_before_exclusions %>% 
   mutate(exclude_participant = case_when(tolower(age) == "test" ~ "exclude",
                                          tolower(gender) == "test" ~ "exclude",
                                          is.na(mean_evaluation) ~ "exclude",

@@ -158,12 +158,15 @@ TODO add descriptive stats for AMP
 
 #Calculate the mean amp score for women and men 
 
-#TODO: probably conduct the dataset aside and not within the code directly 
+
 data_descriptives_amp <- dat_age_gender %>% 
-  full_join(data_prob_correct, by="subject") %>% 
-  group_by(group = gender) %>% 
+  full_join(data_prob_correct, by="subject")  
+  
+
+
+table_descriptives <- data_descriptives_amp %>% group_by(group = gender) %>% 
   summarise(Mean = mean(amp_score, na.rm = TRUE),
-            SD = sd(amp_score, na.rm = TRUE)) %>% na.omit()
+            SD = sd(amp_score, na.rm = TRUE)) %>% na.omit() %>% adorn_pct_formatting(digits = 2)
 
 
 ```

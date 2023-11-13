@@ -25,6 +25,8 @@ options(scipen = 999)
 
 # Dependencies
 
+
+
 ```{r}
 
 library(tidyverse)
@@ -333,26 +335,34 @@ Magnify areas of your plot with ggmagnify: https://hughjonesd.github.io/ggmagnif
 
 \TODO Magnify an area of one of your scatter plots, eg where there are a lot of data points in a small area.
 
-```{r eval=FALSE, include=FALSE}
+
+```{r}
 # install.packages("remotes")
 remotes::install_github("hughjonesd/ggmagnify")
 
-
 ```
+
+
 ```{r}
 library(ggplot2)
 library(ggmagnify)
 
-ggp <- ggplot(dv, aes(Position, NegLogP)) + 
-  geom_point(color = "darkblue", alpha = 0.8, size = 0.8) +
-  labs(title = "GWAS p-values for cognitive function",
-       subtitle = "Davies et al. (2018).", y = "-log(p)")
 
-from <- c(xmin = 9.75e7, xmax = 9.95e7, ymin = 16, ymax = 28)
-# Names xmin, xmax, ymin, ymax are optional:
-to <- c(2e08 - 2e7, 2e08 + 2e7,10, 26)
 
-ggp + geom_magnify(from = from, to = to)
+Magnify <- ggplot(data_processed_after_exclusions, 
+       aes(x = AMP_score,
+           y = mean_evaluation, 
+           label = subject)) +
+  geom_point (color = "red") +
+  scale_colour_discrete(name = "gender",
+                        labels = c("female", "male", "non-binary"))+ xlim(c(1.5, 6))
+
+
+
+Magnify + geom_magnify(from = c(.45, .065, 1, 1.5), to = c(.25, .75, 3, 5),
+               shadow = TRUE) 
+
+
 ```
 
 

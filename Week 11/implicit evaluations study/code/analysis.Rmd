@@ -1,7 +1,7 @@
 ---
 title: "Evaluations of positive and negative stimuli using the Affective Misattribution Procedure (AMP) and self-reports"
 subtitle: "Analysis"
-author: "Template: Ian Hussey; content: [Student name]"
+author: "Template: Ian Hussey; content: Emilie"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
@@ -168,6 +168,32 @@ ggplot(data_processed_after_exclusions, aes(x = mean_evaluation)) +
 
 ```{r}
 
+### Descriptive stats
+
+# all self evluations 
+
+dat_mean_ratings <- data_processed_after_exclusions |>
+  summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
+            SD = sd(mean_evaluation, na.rm = TRUE),
+            n = n()) |>
+  mutate(group = "Full sample")
+
+# by gender
+dat_mean_ratings_by_gender <- data_processed_after_exclusions |>
+  group_by(group = gender) |>
+  summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
+            SD = sd(mean_evaluation, na.rm = TRUE),
+            n = n())
+
+# combine
+bind_rows(dat_mean_ratings,
+          dat_mean_ratings_by_gender) |>
+  select(Subset = group, Mean, SD, n) |> 
+  mutate(Subset = stringr::str_to_sentence(Subset)) |> 
+  mutate_if(is.numeric, round_half_up, digits = 2) |>
+  kable() |>
+  add_header_above(header = c(" " = 1, "AMP Evaluations" = 3)) |>
+  kable_classic(full_width = FALSE)
 
 ```
 
@@ -237,6 +263,38 @@ Scatter plots with axial histograms using ggExtra: https://cran.r-project.org/we
 \TODO add axial histograms to a scatter plot. In a single plot, present different regression lines split by gender, and separate axial histograms for each gender.
 
 ```{r}
+library("ggExtra")
+library("ggplot2")
+
+
+#creating a plot 
+plot1 <- ggplot(data_processed_after_exclusions, 
+       aes(x = AMP_score,
+           y = mean_evaluation)) +
+  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1),
+              alpha = 0.5) +
+  xlab("AMP score") +
+  ylab("Mean self-reported evaluation") +
+  theme_linedraw() 
+
+ggMarginal(plot1, type = "histogram")
+
+
+#Split them by gender 
+
+Axial_histogram_gender <- ggplot(data_processed_after_exclusions, 
+       aes(x = AMP_score,
+           y = mean_evaluation, 
+           colour = gender)) +
+ geom_point () +
+  scale_colour_discrete(name = "gender",
+                        labels = c("female", "male", "non-binary")) +
+                        theme(legend.position = c(.15, .7)) #changing the legends position
+
+
+ggMarginal(Axial_histogram_gender, type = "histogram", groupColour = T, groupFill = T)
+
+
 
 
 
@@ -248,13 +306,41 @@ Label points using ggrepel: https://cran.r-project.org/web/packages/ggrepel/vign
 
 \TODO Label the points in a scatter plot using their participant codes. Label only the participants with more extreme scores.
 
+To change colors use:
+
+```{r eval=FALSE, include=FALSE}
+##colors 
+colors <- viridis_pal(begin = 0.0, end = 1.0, option = "mako")(10)
+colors
+show_col(colors)
+```
+
+
+```{r}
+library(ggrepel)
+```
+
+
 ```{r}
 
-colors <- viridis_pal(begin = 0.0, end = 1.0, option = "mako")(10)
+#Plot 
+Point_labels <- ggplot(data_processed_after_exclusions, 
+       aes(x = AMP_score,
+           y = mean_evaluation, 
+           label = subject)) +
+  geom_point (color = "red") +
+  scale_colour_discrete(name = "gender",
+                        labels = c("female", "male", "non-binary"))
 
-colors
+set.seed(42)
 
-show_col(colors)
+p1 <- Point_labels + geom_text() + labs(title = "geom_text()")
+
+p2 <- Point_labels + geom_text_repel() + labs(title = "geom_text_repel()")
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+
 
 ```
 
@@ -265,14 +351,35 @@ Magnify areas of your plot with ggmagnify: https://hughjonesd.github.io/ggmagnif
 \TODO Magnify an area of one of your scatter plots, eg where there are a lot of data points in a small area.
 
 ```{r}
+# Load necessary libraries
+library(ggplot2)
+library(ggmagnify)
 
+# Your original scatter plot
+ggp <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, y = mean_evaluation)) +
+  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1), alpha = 0.5) +
+  xlab("AMP score") +
+  ylab("Mean self-reported evaluation") +
+  theme_linedraw()
 
+# Define the area to be magnified
+# Adjust these values to the area you want to zoom in on
+from <- c(xmin = 0.3, xmax = 0.8, ymin = 0.8, ymax = 1.3)
 
+# Define where to place the magnified inset on the plot
+# Adjust these values to place the inset where you like
+to <- c(xmin = 0, xmax = 0.25, ymin = 4, ymax = 5)
+
+# Add the magnified area to the plot
+ggp + geom_magnify(from = from, to = to)
 ```
+
 
 ### Test
 
 \TODO run an appropriate test. Below the output, interpret the results: write a few sentences that report and interpret the results following APA reporting style.
+Statistical inference test ---> Test stats and p value 
+Hypothesis: Self-reported evaluations are correlated with evaluations on the AMP
 
 ```{r}
 
@@ -287,7 +394,58 @@ Magnify areas of your plot with ggmagnify: https://hughjonesd.github.io/ggmagnif
 \TODO split histogram, split violin plot, raincloud plot, etc.
 
 ```{r}
+#####split histogram
+# Create the base plot
+splithistogramv1 <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, fill = gender)) +
+    geom_histogram(position = "dodge", binwidth = 0.15) + # Adjust binwidth as needed
+    facet_grid(. ~ gender) + # Splitting the histogram by gender
+    xlab("AMP score") +
+    ylab("Mean self-reported evaluation") +
+    theme_minimal()
 
+# Add marginal histograms (if needed)
+# ggMarginal(p1, groupColour = TRUE, groupFill = TRUE, type = "histogram")
+
+# Print the plot
+print(splithistogramv1)
+
+
+
+
+
+# Create the split violin plot
+splitviolinv1 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
+    geom_violin(scale = "area", trim = FALSE) + # Violin plot
+    geom_boxplot(width = 0.1, fill = "white") + # Add a boxplot inside the violin
+    facet_wrap(~gender, scales = "free_x") + # Splitting by gender
+    xlab("Gender") +
+    ylab("AMP Score") +
+    theme_minimal()
+
+# Print the plot
+print(splitviolinv1)
+
+
+# Load necessary libraries
+library(ggplot2)
+library(ggbeeswarm) # for geom_quasirandom
+
+# Create the raincloud plot
+raincloudplotv1 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
+    # Add a half violin plot
+    geom_violin(trim = FALSE, scale = "area", adjust = 1.5, alpha = 0.5) +
+    # Add the boxplot
+    geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
+    # Add points
+    geom_quasirandom(aes(color = gender), size = 2, alpha = 0.5, show.legend = FALSE) +
+    # Customizations
+    scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") +
+    labs(x = "Gender", y = "AMP Score") +
+    theme_minimal()
+
+# Print the plot
+print(raincloudplotv1)
 
 
 ```
@@ -295,6 +453,7 @@ Magnify areas of your plot with ggmagnify: https://hughjonesd.github.io/ggmagnif
 ### Test
 
 \TODO run an appropriate test. Below the output, interpret the results: write a few sentences that report and interpret the results following APA reporting style.
+Self-reported evalautions differ between men and women = Hyp. 2 --> T-Test split 
 
 ```{r}
 

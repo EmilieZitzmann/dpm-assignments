@@ -280,23 +280,22 @@ plot1 <- ggplot(data_processed_after_exclusions,
 ggMarginal(plot1, type = "histogram")
 
 
-#Split them by gender 
+#Split them by gender and add regression line 
 
 Axial_histogram_gender <- ggplot(data_processed_after_exclusions, 
-       aes(x = AMP_score,
-           y = mean_evaluation, 
-           colour = gender)) +
- geom_point () +
+                                  aes(x = AMP_score,
+                                      y = mean_evaluation, 
+                                      colour = gender)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "pink") +  # Add regression line
   scale_colour_discrete(name = "gender",
                         labels = c("female", "male", "non-binary")) +
-                        theme(legend.position = c(.15, .7)) #changing the legends position
+  theme(legend.position = c(.15, .7))
+
+ggMarginal(Axial_histogram_gender, type = "histogram", groupColour = TRUE, groupFill = TRUE)
 
 
-ggMarginal(Axial_histogram_gender, type = "histogram", groupColour = T, groupFill = T)
-
-
-
-
+#The regression line kinda shows a negative trend --> important to observe a first trend 
 
 ```
 
@@ -340,6 +339,8 @@ p2 <- Point_labels + geom_text_repel() + labs(title = "geom_text_repel()")
 
 gridExtra::grid.arrange(p1, p2, ncol = 2)
 
+#R itself gives us a warning, that there are unlabeled data points and too many overlaps, so this plot is not really useful 
+#a way this plot is often used is to show the outliers or identify them, this is easily done by just putting the outlier variable or an order reporting the outliers directly in to the ggplot 
 
 
 ```
@@ -373,8 +374,6 @@ to <- c(xmin = 0, xmax = 0.25, ymin = 4, ymax = 5)
 # Add the magnified area to the plot
 ggp + geom_magnify(from = from, to = to)
 ```
-
-
 ### Test
 
 \TODO run an appropriate test. Below the output, interpret the results: write a few sentences that report and interpret the results following APA reporting style.
@@ -383,7 +382,25 @@ Hypothesis: Self-reported evaluations are correlated with evaluations on the AMP
 
 ```{r}
 
+# In order tot check wether self report evaluations are correlated with the amp evaluations we remember the regression line above where we saw a slight negative trend We should test this statistically 
+result <- cor.test(data_processed_after_exclusions$mean_evaluation, data_processed_after_exclusions$AMP_score, method = "pearson")
 
+# Print the test statistics and p-value
+print(result)
+#if we want the results specifically
+ result$p.value
+ result$estimate
+
+#we see a negative correlation however it is not significant (p = .2435), also seen in confidence interval that includes 0 suggesting that there is no correlation in the data 
+
+# we can alos check for a spearman correlation test
+ result2 <- cor.test(data_processed_after_exclusions$mean_evaluation, data_processed_after_exclusions$AMP_score, method = "spearman")
+
+ result2$p.value
+ result2$estimate
+
+ 
+#for the spearman it is almost identical (not surprisingly)
 
 ```
 
@@ -395,43 +412,51 @@ Hypothesis: Self-reported evaluations are correlated with evaluations on the AMP
 
 ```{r}
 #####split histogram
-# Create the base plot
-splithistogramv1 <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, fill = gender)) +
-    geom_histogram(position = "dodge", binwidth = 0.15) + # Adjust binwidth as needed
-    facet_grid(. ~ gender) + # Splitting the histogram by gender
-    xlab("AMP score") +
-    ylab("Mean self-reported evaluation") +
-    theme_minimal()
 
-# Add marginal histograms (if needed)
-# ggMarginal(p1, groupColour = TRUE, groupFill = TRUE, type = "histogram")
-
-# Print the plot
-print(splithistogramv1)
-
-
-
-
-
-# Create the split violin plot
-splitviolinv1 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
-    geom_violin(scale = "area", trim = FALSE) + # Violin plot
-    geom_boxplot(width = 0.1, fill = "white") + # Add a boxplot inside the violin
-    facet_wrap(~gender, scales = "free_x") + # Splitting by gender
-    xlab("Gender") +
-    ylab("AMP Score") +
-    theme_minimal()
+# Create a first layer base plot
+splithistogram <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, fill = gender)) +
+  geom_histogram(position = "dodge", binwidth = 0.15, color = "black", alpha = 0.7) + # Add black borders and some transparency
+  facet_grid(. ~ gender) + # Splitting the histogram by gender
+  xlab("AMP score") +
+  ylab("Mean self-reported evaluation") +
+  theme_minimal() +
+  theme(legend.position = c(0.8, 0.8), legend.background = element_rect(fill = "white"))
 
 # Print the plot
-print(splitviolinv1)
+print(splithistogram)
+
+#the first plot shows a slight difference in the mean with male participants having more of a typical distribution and women having slightly lower scores 
 
 
-# Load necessary libraries
+
+#####Violin plot
+
+splitviolin <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
+  geom_violin(scale = "width", trim = FALSE, alpha = 0.7, color = "black") + # Adjusting width, adding transparency, and black borders
+  geom_boxplot(width = 0.1, fill = "white", color = "black", alpha = 0.7) + # Enhancing boxplot appearance
+  facet_wrap(~gender, scales = "free_x") + # Splitting by gender
+  xlab("Gender") +
+  ylab("AMP Score") +
+  theme_minimal() +
+  theme(legend.position = c(0.8, 0.8), legend.background = element_rect(fill = "white"))
+
+# Print the plot
+print(splitviolin)
+
+#This plot shows a bit more information: the central tendencies of the two are quite the same (the center), also the density seems quite the same (= shape shows the distribution of AMP Scores), but the female measures have a bit lower scores (we could already see that in the histogram)
+#Men do have a slightly higher amount of outliers 
+#Boxplot for women is a bit bigger, median seems about the same
+#
+
+
+#####raincloud plot
+# necessary packages 
 library(ggplot2)
-library(ggbeeswarm) # for geom_quasirandom
+library(ggdist) #We could use this to do a flat violin 
+library(ggbeeswarm)
 
-# Create the raincloud plot
-raincloudplotv1 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
+
+raincloudplot <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
     # Add a half violin plot
     geom_violin(trim = FALSE, scale = "area", adjust = 1.5, alpha = 0.5) +
     # Add the boxplot
@@ -445,18 +470,29 @@ raincloudplotv1 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = A
     theme_minimal()
 
 # Print the plot
-print(raincloudplotv1)
+print(raincloudplot)
 
 
+#The information provided here is somewhat different again: we have the information of the violin plots before (median about the same etc.), the added information here are the distribution points that we have "extra" --> we can see that where the width increases we have more differing points (this is obvious since the width is there to represent this exact thing), yet we can see that there seems more differing points for men and less for women
+
+#all in all I don't really think that there is a difference between AMP Scores in men and women but let's find out by running the statistical test 
 ```
 
 ### Test
 
 \TODO run an appropriate test. Below the output, interpret the results: write a few sentences that report and interpret the results following APA reporting style.
-Self-reported evalautions differ between men and women = Hyp. 2 --> T-Test split 
+Self-reported evalautions differ between men and women 
 
 ```{r}
+#Since our factor has more than 2 layers (Stufen) we have to conduct an anova, but the anova does not work either, because we have a lot of measures (sometimes it returns no p-value, or value = NULL). The kruskal result avoids that (This tests whether there are significant differences between two or more groups --> since we have nonbinary in our dataset as well we use this one)
 
+# Assume 'data' is your dataset with columns 'AMP_score' and 'gender'
+kruskal_result <- kruskal.test(AMP_score ~ gender, data = data_processed_after_exclusions)
+
+# Print the result
+print(kruskal_result)
+
+#Not surprisingly there is no significant difference with p equaling .9841 
 
 
 ```
@@ -470,7 +506,40 @@ Self-reported evalautions differ between men and women = Hyp. 2 --> T-Test split
 This time, vary the labeling and order of the legend, e.g., capitalise "Men" and "Women", and know how to change the order of the factors.
 
 ```{r}
+#####Split Histogram 
+#vary the labeling and order of the legend 
+#To vary the labeling we can easily convert two vectors and include them into the plot --> for each plot we can include the labels like that 
 
+# Define custom labels and order for the legend
+custom_labels <- c("Women", "Men", "Nonbinary")
+custom_order <- c("female", "male", "non-binary")
+
+# Create the split histogram plot with modified legend
+splithistogram2 <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, fill = gender)) +
+  geom_histogram(position = "dodge", binwidth = 0.15, color = "black", alpha = 0.7) +
+  facet_grid(. ~ gender) +
+  xlab("AMP score") +
+  ylab("Mean self-reported evaluation") +
+  theme_minimal() +
+  theme(legend.position = c(0.8, 0.8), legend.background = element_rect(fill = "white")) +
+  scale_fill_manual(values = c("female" = "red", "male" = "blue", "non-binary" = "green"),  # Adjust colors if needed
+                    labels = custom_labels,
+                    breaks = custom_order)
+
+# Print the plot
+print(splithistogram2)
+
+
+splithistogram2 <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, fill = gender)) +
+  geom_histogram(position = "dodge", binwidth = 0.15, color = "black", alpha = 0.7) + # Add black borders and some transparency
+  facet_grid(. ~ gender) + # Splitting the histogram by gender
+  xlab("AMP score") +
+  ylab("Mean self-reported evaluation") +
+  theme_minimal() +
+  theme(legend.position = c(0.8, 0.8), legend.background = element_rect(fill = "white"))
+
+# Print the plot
+print(splithistogram2)
 
 
 ```

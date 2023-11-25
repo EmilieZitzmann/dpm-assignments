@@ -237,6 +237,8 @@ If it has not already been created, this code write the codebook template to dis
 Be sure to ALWAYS do it, since people forget the labels, the maximum and minimum values etc. We should also specify what they should be (numeric etc.)
 
 
+I filled out some parts of the codebook but I am not sure whether it is visible on Github:)
+
 ```{r}
 
 if(!file.exists("../data/processed/data_processed_codebook.xlsx")){

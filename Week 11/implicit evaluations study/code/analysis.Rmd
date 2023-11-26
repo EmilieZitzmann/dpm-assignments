@@ -534,6 +534,7 @@ Self-reported evalautions differ between men and women
 data_male <- subset(data_processed_after_exclusions, gender == "male")
 data_female <- subset(data_processed_after_exclusions, gender == "female")
 
+
 #doing a T-Test with the mean_evaluation self reports 
 t_test_result <- t.test(mean_evaluation ~ gender, data = rbind(data_male, data_female))
 
@@ -668,7 +669,12 @@ Hypothesis from above: Evaluations on the Affect Misattribution Procedure differ
 ```{r}
 
 #t test
-AMP_t_test_result <- t.test(AMP_score ~ gender, data = data_p_e_without_nb)
+
+
+data_tests <- rbind(data_male, data_female)
+
+
+AMP_t_test_result <- t.test(AMP_score ~ gender, data = data_tests)
 print(AMP_t_test_result)
 
 

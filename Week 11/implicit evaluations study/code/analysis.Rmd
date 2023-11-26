@@ -539,7 +539,12 @@ t_test_result <- t.test(mean_evaluation ~ gender, data = rbind(data_male, data_f
 #Printing the results in order to see whether it is significant or not: 
 print(t_test_result)
 
-#The independent two-sample T-test serves to assess whether two groups differ with regard to a certain variable and is therefore permissible as a test value for the present hypothesis. The T-test indicates a significant difference between men and women (p= 0.0106). Similarly, the 95% confidence interval does not contain zero, which likewise underlines the significance of the differences in the self-report values between men and women. The present results can thus show that a significant difference is evident between the self-reported mean evaluations of men and women. 
+
+library(report)
+report_table(t_test_result)
+report_effectsize(t_test_result)
+report_text(t_test_result)
+
 
 
 #If a T-Test is not possible (this is the case when there is more than two independent groups) we can conduct a Kruskal_Wallis-Test. If we would like to include all genders (not only men and women), a Kruskal test is appropriate. 
@@ -660,14 +665,7 @@ Hypothesis from above: Evaluations on the Affect Misattribution Procedure differ
 
 ```{r}
 
-#Since our factor has more than 2 layers (Stufen) we have to conduct an anova, but the anova does not work either, because we have a lot of measures (sometimes it returns no p-value, or value = NULL). The kruskal result avoids that (This tests whether there are significant differences between two or more groups --> since we have nonbinary in our dataset as well we use this one)
-
-
-#What does this test do exactly ? It 
-kruskal_result <- kruskal.test(mean_evaluation ~ gender, data = data_processed_after_exclusions)
-
-# Print the result
-print(kruskal_result)
+#evtl Kruskal here??? 
 
 ```
 

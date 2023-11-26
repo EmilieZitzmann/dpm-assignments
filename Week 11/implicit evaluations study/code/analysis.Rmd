@@ -626,7 +626,8 @@ print(splitviolin2)
 
 
 
-##### Raincloud plot 
+##### Raincloud plot
+library(ggbeeswarm)
 
 #We are again taking our same labels as above ( we do not have to read them in all of the time but it is better to have an intersubjective view of what happened)
 custom_labels <- c( "Women", "Non-binary", "Men") 
@@ -665,6 +666,7 @@ Hypothesis from above: Evaluations on the Affect Misattribution Procedure differ
 
 ```{r}
 
+#evtl Kruskal here??? 
 
 ```
 
@@ -677,7 +679,6 @@ Combine plots using the library [patchwork](https://patchwork.data-imaginist.com
 ```{r}
 
 # you can combine things with patchwork
-install.packages("patchwork")
 library(patchwork)
 
 

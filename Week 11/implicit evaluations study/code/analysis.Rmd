@@ -211,6 +211,7 @@ ggplot(data_processed_after_exclusions, aes(x = AMP_score)) +
   theme_linedraw() +
   scale_x_continuous(breaks = pretty_breaks(n = 10))
 
+
 ```
 
 # Analyses & hypothesis tests
@@ -666,7 +667,15 @@ Hypothesis from above: Evaluations on the Affect Misattribution Procedure differ
 
 ```{r}
 
-#evtl Kruskal here??? 
+#t test
+AMP_t_test_result <- t.test(AMP_score ~ gender, data = data_p_e_without_nb)
+print(AMP_t_test_result)
+
+
+report_table(AMP_t_test_result)
+report_effectsize(AMP_t_test_result)
+
+report_text(AMP_t_test_result)
 
 ```
 

@@ -665,7 +665,6 @@ Hypothesis from above: Evaluations on the Affect Misattribution Procedure differ
 
 ```{r}
 
-#evtl Kruskal here??? 
 
 ```
 
@@ -677,6 +676,40 @@ Combine plots using the library [patchwork](https://patchwork.data-imaginist.com
 
 ```{r}
 
+# you can combine things with patchwork
+install.packages("patchwork")
+library(patchwork)
+
+
+#First we have to remove the legends from the plots 
+splithistogram2_plot <- splithistogram2 + theme(legend.position = "none")
+splitviolin2_plot <- splitviolin2 + theme(legend.position = "none")
+raincloudplot2_plot <- raincloudplot2 + theme(legend.position = "none")
+
+#Combining a plot (with +)
+combined_plot <- splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot
+
+
+print(combined_plot)
+
+#This does not look too pretty so you can modify the codes 
+
+
+# Customize the appearance of the combined plot
+combined_plot <- (splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot +
+  plot_layout(ncol = 3) +  # Set the number of columns
+  theme_minimal() +        # Use a minimal theme
+  theme(
+    plot.margin = margin(15, 15, 15, 15),  # Adjust overall margins
+    strip.text = element_text(size = 10),   # Adjust text size in facet labels
+    legend.position = "bottom",             # Move the legend to the bottom
+    legend.direction = "horizontal",        # Arrange legend items horizontally
+    legend.box = "horizontal"                # Use a horizontal legend box
+  )
+)
+
+# Print the customized combined plot
+print(combined_plot)
 
 
 ```
@@ -689,6 +722,11 @@ Save plots to disk with `ggsave()`
 
 ```{r}
 
+ggsave("combined_plot.png", combined_plot, width = 15, height = 5, units = "in", dpi = 300)
+
+ggsave("combined_plot.pdf", combined_plot, width = 15, height = 5, units = "in", dpi = 300)
+
+#Both of them are in the same folder as analysis and processing
 
 
 ```

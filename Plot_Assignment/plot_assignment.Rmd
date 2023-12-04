@@ -1,0 +1,98 @@
+---
+title: "Plot assignment"
+author: "Template: Ian Hussey; content: Emilie"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+```{r, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE,
+                      warning = FALSE)
+
+```
+
+Tell him what we want to do with the good plot and what it shows, in the bad plot we don't turn the alpha value low, we use bad colors, that don't help the lines stand outt, clearly not distinct colors, communicate what we did to make the bad plot confusing and the good plot good --> we should get what a good plot is all about and add layers --> produce a reproduceable plot, the data can be made up if we choose, we can use rnorm as in the file, we can put data in an excel frame, real data from open science, no restrictions on what the data is --> it does not matter. The plot should be reproduceable, it should be evident that we got what a good plot is about and what not, the story of the data should be told correctly --> it does not have to make sense.
+The plot should not be too basic, barplot no, but also it should not be a plot that nobody uses --> Raincloud plots are good and really informative, people actually use them --> Balance between looking nice and being useful and filled with information --> Plots in publications are a bit simpler than the ones in infographics, we can also imitate one that was in an infographic or in a blog, data is beautiful is NOT a good source (be careful with it, the choice sometimes is not too great).
+
+Return the data, the code, either png or pdf file of the plot --> final assignment, try citing source if not too much (the book from Lisa for example) 1x each, the plots don't have to be the same but they should have some correspondance (both of the plot should try to explain the same thing --> Raincloud does it well and pie chart not for example)
+
+Datasets Correlations group differences: 
+- osf.io --> specific project: AIID dataset: https://osf.io/pcjwf/, dataset with a huge amount of stuff in there, confirmatory dataset out of this one is the largest (don't try to understand, just plot something, we can just label something). 
+
+Deadline: 
+
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+
+```
+
+# Instructions
+
+The goal of this exercise is to produce both good and bad examples of plots *and to be explicit about what makes them good or bad*. 
+
+The data can be real or fabricated. The plots can convey realistic or silly messages - but they must convey them clearly. You can get real data from many sources. A good one is the open science framekwork (osf.io). You can also simply make up data, either by hand or using simulation functions (e.g., `rnorm`) or the many simulation packages. If simulating data, ensure that you (a) use set.seed() to make it reproudbile, and (b) save a copy of the final data that you're using to disk and then reload it in the script so that the plot is reproducible.
+
+The goal is neither to reproduce the types of plots that you most often see in journals (bar plots, etc.) nor to use a very fancy looking plot just for the sake of it - if it is very unlikely that you'd ever be able to use the plot to convey a research finding in an article, blog, poster, tweet, infographic or otherwise, it's probably not a good choice either.
+
+The plots must be reproducible. Provide the data as well as the code to reporduce them. The plots should also be saved as individual images (pdf or png).
+
+Under each plot, here in the RMarkdown, briefly explain what types of analysis the plot is suitable for, what elements of the results the plot attempts to clearly convey. For the bad plot, do the opposite: emphasise what features of the results the plot obscures or makes unclear. In doing so, communicate to me that you understand what makes a good plot to convey the results of quantiative analyses to viewers.
+
+Consider making use of the many extensions to ggplot2, e.g.: Good sources ( see if we can integrate them)
+
+- https://r-graph-gallery.com
+- https://krzjoa.github.io/awesome-r-dataviz/#/
+- ggdist https://mjskay.github.io/ggdist/
+- ggrepel
+- ggpubr
+- see
+- ggsignif
+- and others: https://exts.ggplot2.tidyverse.org/gallery/
+
+# Good plot
+
+```{r}
+
+
+
+```
+
+# Bad plot
+
+```{r}
+
+
+
+```
+
+# Write to disk
+
+Write to disk as a .pdf or .png.
+
+Name them "plot_good_[yourname]" and "plot_bad_[yourname]".
+
+```{r}
+
+
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
+
+

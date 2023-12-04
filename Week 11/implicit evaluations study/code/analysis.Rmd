@@ -415,6 +415,8 @@ print(result)
 ```{r}
 #####split histogram
 
+#I included a legend in all three plots, this is not particularly useful since there are automatically created axial labels and it is looking rather overplottet, it is just for exercise reasons to see how a Legend can be included and modified (see in Chunk below)
+
 library(ggplot2)
 library(hrbrthemes)  #really cool package for better themes 
 
@@ -695,14 +697,16 @@ Combine plots using the library [patchwork](https://patchwork.data-imaginist.com
 
 ```{r}
 
+#The put together plots don't really make any sense since they do not have the same labels on the axis, yet it is an example of how it should work. In order to remove the automatically created axial labels we could change this directly within the plots themselves 
 # you can combine things with patchwork
 library(patchwork)
 
 
 #First we have to remove the legends from the plots 
-splithistogram2_plot <- splithistogram2 + theme(legend.position = "none")
-splitviolin2_plot <- splitviolin2 + theme(legend.position = "none")
-raincloudplot2_plot <- raincloudplot2 + theme(legend.position = "none")
+
+splithistogram2_plot <- splithistogram2_plot + theme(legend.position = "none") 
+splitviolin2_plot <- splitviolin2 + theme(legend.position = "none") 
+raincloudplot2_plot <- raincloudplot2 + theme(legend.position = "none") 
 
 #Combining a plot (with +)
 combined_plot <- splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot
@@ -722,7 +726,9 @@ combined_plot <- (splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot
     strip.text = element_text(size = 10),   # Adjust text size in facet labels
     legend.position = "bottom",             # Move the legend to the bottom
     legend.direction = "horizontal",        # Arrange legend items horizontally
-    legend.box = "horizontal"                # Use a horizontal legend box
+    legend.box = "horizontal" , 
+  axis.text.x = element_blank(),          # Remove x-axis labels
+    axis.text.y = element_blank() # Use a horizontal legend box
   )
 )
 

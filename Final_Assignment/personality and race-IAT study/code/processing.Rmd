@@ -36,19 +36,16 @@ library(openxlsx)
 
 ```{r}
 
-# demographics
-data_demographics_raw <- read_csv("../data/raw/data_demographics_raw.csv") |>
+# Demographics
+data_raw_demographics <- read_csv("../data/raw/data_raw_demographics.csv") |>
   janitor::clean_names()
 
-# data_demographics_raw_messy <- read_csv("../data/raw/data_demographics_raw_messy.csv", skip = 2) |>
-#   janitor::clean_names()
-
-# self report measure
-data_selfreport_raw <- read_csv("../data/raw/data_selfreport_raw.csv") |>
+# Self report measure big five inventory 
+data_raw_bfi <- read_csv("../data/raw/data_raw_bfi.csv") |>
   janitor::clean_names()
 
-# affect attribution procedure
-data_amp_raw <- read_csv("../data/raw/data_amp_raw.csv") |>
+# Implicit association test
+data_raw_iat <- read_csv("../data/raw/data_raw_iat.csv") |>
   janitor::clean_names()
 
 ```
@@ -57,22 +54,45 @@ data_amp_raw <- read_csv("../data/raw/data_amp_raw.csv") |>
 
 ```{r}
 
-dat_age_gender <- data_demographics_raw |>
-  select(subject, date, time, trialcode, response) |>
-  pivot_wider(names_from = trialcode,
-              values_from = response) |>
-  mutate(gender = tolower(gender),
-         gender = stringr::str_remove_all(gender, regex("\\W+")), # regex is both very useful and awful to write
-         gender = case_when(gender == "female" ~ gender,
-                            gender == "male" ~ gender,
-                            gender == "nonbinary" ~ gender,
-                            gender == "woman" ~ "female",
-                            gender == "man" ~ "male",
-                            TRUE ~ "other/missing/error"),
-         age = case_when(str_detect(age, "^[0-9]+$") ~ age, # if the value is only numbers, keep it. 
-                         TRUE ~ "other/missing/error")) 
+#Extracting Age and Gender
+dat_age_gender <- data_raw_demographics |>
+  pivot_wider(names_from = unique_id,
+              values_from = response) |> 
+  column_to_rownames(var="variable") # with this step Age and Gender will act as row names so they are                                             easier to select for further analysis
+
+
+#Relabel "sex" to Gender
+dat_age_gender <- dat_age_gender 
+row.names(dat_age_gender)[2] <- "Gender"
+
+#Relabel "age" to Age
+dat_age_gender <- dat_age_gender 
+row.names(dat_age_gender)[1] <- "Age"
+
+
+# Extract Gender and Age
+Gender <- dat_age_gender["Gender", , drop = F] #if we put drop = F the result will remain a dataframe
+Age <- dat_age_gender["Age", , drop = F]
+
+# Print the result
+view(Gender)
+view(Age)
+
+
+
 
 ```
+#BFI 
+## Reverse Score negatively worded items
+
+```{r}
+
+
+
+
+```
+
+
 
 # Exclusions / data quality
 

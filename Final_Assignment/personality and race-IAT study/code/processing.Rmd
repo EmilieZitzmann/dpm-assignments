@@ -114,7 +114,6 @@ view(Age)
 ```
 
 
-
 #BFI 
 
 As part of the study, each respondent was asked to complete between two and three subscales of the Big 5 personality inventory.
@@ -159,51 +158,51 @@ To check whether the reversals are likely to be correct a correlation matrix for
 
 #Extroversion
 Matrix_extroversion_reversed <- dat_reversed_items |>
-  select(starts_with("bfi_e")) |>
+  select(contains("bfi_e")) |>
   cor(method = "pearson", use = "complete.obs")
 
 Matrix_extroversion_original <- data_raw_bfi |>
-   select(starts_with("bfi_e")) |>
+   select(contains("bfi_e")) |>
   cor(method = "pearson", use = "complete.obs")
 
 
 #Conscientiousness 
 Matrix_conscient_reversed <- dat_reversed_items |>
-  select(starts_with("bfi_c")) |>
+  select(contains("bfi_c")) |>
   cor(method = "pearson", use = "complete.obs")
 
 Matrix_conscient_original <- data_raw_bfi |>
-   select(starts_with("bfi_c")) |>
+   select(contains("bfi_c")) |>
   cor(method = "pearson", use = "complete.obs")
 
 
 #Neuroticism
 Matrix_neuroticism_reversed <- dat_reversed_items |>
-  select(starts_with("bfi_n")) |>
+  select(contains("bfi_n")) |>
   cor(method = "pearson", use = "complete.obs")
 
 Matrix_neuroticism_original <- data_raw_bfi |>
-   select(starts_with("bfi_n")) |>
+   select(contains("bfi_n")) |>
   cor(method = "pearson", use = "complete.obs")
 
 
 #Agreeableness
 Matrix_agreeable_reversed <- dat_reversed_items |>
-  select(starts_with("bfi_a")) |>
+  select(contains("bfi_a")) |>
   cor(method = "pearson", use = "complete.obs")
 
 Matrix_agreeable_original <- data_raw_bfi |>
-   select(starts_with("bfi_a")) |>
+   select(contains("bfi_a")) |>
   cor(method = "pearson", use = "complete.obs")
 
 
 #Openness
 Matrix_openness_reversed <- dat_reversed_items |>
-  select(starts_with("bfi_o")) |>
+  select(contains("bfi_o")) |>
   cor(method = "pearson", use = "complete.obs")
 
 Matrix_openness_original <- data_raw_bfi |>
-   select(starts_with("bfi_o")) |>
+   select(contains("bfi_o")) |>
   cor(method = "pearson", use = "complete.obs")
 
 
@@ -211,7 +210,7 @@ Matrix_openness_original <- data_raw_bfi |>
 ```
 
 
-Check that the item level data does not violate the logical minimum and maximum scores (1 to 6). Create an exclusion variable and set participants with impossible data to “exclude”. The columns are selected with c_across and we only select the ones that contain bfi
+Check that the item level data does not violate the logical minimum and maximum scores (1 to 6). Create an exclusion variable and set participants with impossible data to “exclude”. The columns are selected with c_across and we only select the ones that contain information with bfi
 
 
 ```{r}
@@ -222,7 +221,7 @@ logical_min <- 1
 logical_max <- 6
 
 #creating the dataset 
-data_logical_number <- data_raw_bfi |>
+data_logical_number <- dat_reversed_items |>
   rowwise() |>
   mutate(logical_number = ifelse(any(!is.na(c_across(contains("bfi"))) & #selected values are not NA
                                      (c_across(contains("bfi")) < logical_min | 
@@ -232,10 +231,135 @@ data_logical_number <- data_raw_bfi |>
 ```
 
 
+Check that all participants have complete data on the BFI scales they completed. Create an exclusion variable and set participants with incomplete data to “exclude”.
 
-# Exclusions / data quality
+In order to check this we set the ifelse to all, as we want just participants that have completed all information in at least one questionnaire. We do this for every questionnaire and then we can check whether it looks about right by arranging it with arrange(). We can see that it worked as for example 232178 has a missing value in extraversion although it might have completed the questionnaire yet it is excluded. We use the left_join as we know that there is no duplicated ID (hier müsste ich dann aber noch integrieren, was oben gemacht wurde in der ersten Aufgabe mit filter), we know that all of the same information exists in all of the datasets and unique id is the same in all of them --> will not mess up 
 
-## AMP
+
+```{r}
+
+#Extroversion
+data_extroversion_exclusion <- dat_reversed_items |> 
+  rowwise() |> 
+  mutate(completed_q_e = ifelse(all(!is.na(c_across(contains("bfi_e")))), "include", "exclude")) |>
+  arrange(completed_q_e) 
+
+
+#After we have checked that it seems pretty right we filter out the existing ones: 
+
+#Extroversion
+ data_extroversion_exclusion <- dat_reversed_items |> 
+   rowwise() |> 
+   mutate(completed_q_e = ifelse(all(!is.na(c_across(contains("bfi_e")))), "include", "exclude")) |>
+   filter(completed_q_e != "exclude")
+ 
+#Conscientiousness
+data_conscient_exclusion <- dat_reversed_items |> 
+  rowwise() |> 
+  mutate(completed_q_c = ifelse(all(!is.na(c_across(contains("bfi_c")))), "include", "exclude")) |> 
+  filter(completed_q_c != "exclude")
+ 
+
+#Neuroticism
+data_neuroticism_exclusion <- dat_reversed_items |> 
+  rowwise() |> 
+  mutate(completed_q_n = ifelse(all(!is.na(c_across(contains("bfi_n")))), "include", "exclude")) |>
+  filter(completed_q_n != "exclude")
+
+#Agreeableness
+data_agreeable_exclusion <- dat_reversed_items |> 
+  rowwise() |> 
+  mutate(completed_q_a = ifelse(all(!is.na(c_across(contains("bfi_a")))), "include", "exclude")) |>
+  filter(completed_q_a != "exclude")
+
+#Openness
+data_openness_exclusion <- dat_reversed_items |> 
+  rowwise() |> 
+  mutate(completed_q_o = ifelse(all(!is.na(c_across(contains("bfi_o")))), "include", "exclude")) |>
+  filter(completed_q_o != "exclude")
+
+
+
+
+#combining all of the information above within one dataframe 
+
+data_combined_exclusion <- dat_reversed_items |>
+  select(unique_id) |>
+  left_join(data_extroversion_exclusion |>
+            select(unique_id, completed_q_e), by = "unique_id") |>
+  left_join(data_conscient_exclusion |>
+            select(unique_id, completed_q_c), by = "unique_id") |>
+  left_join(data_neuroticism_exclusion |>
+            select(unique_id, completed_q_n), by = "unique_id") |>
+  left_join(data_agreeable_exclusion |>
+            select(unique_id, completed_q_a), by = "unique_id") |>
+  left_join(data_openness_exclusion |>
+            select(unique_id, completed_q_o), by = "unique_id")
+
+
+#Making a final dataframe
+
+data_final_bfi <- dat_reversed_items |> 
+  left_join(data_combined_exclusion, by = "unique_id")
+
+#As it is not really a good overview who should be included or not we can mutate a final variable where we see if a person should be included or not. We overwrite it as we do need the other variable 
+
+data_final_bfi <- data_final_bfi |>
+  rowwise() |>
+  mutate(overall_inclusion = ifelse(any(c(completed_q_e, 
+                                          completed_q_c, completed_q_n, 
+                                          completed_q_a, completed_q_o) =="include"),
+                                    "include",
+                                    "exclude"))
+
+```
+
+
+##Mean score BFI
+
+Mean-score the subscales of the BFI scale. Each participant only got either 2 or 3 subscales.
+Check that the mean scores do not violate the min and max possible score (i.e., first determine this min and max score), and revise your scoring code if it does.
+
+
+We take dat reversed Items but probably after the interpretation we have to be more careful with it 
+
+```{r}
+
+data_mean_bfi <- dat_reversed_items |> 
+  rowwise() |>
+  mutate(mean_extroversion = mean(c_across(contains("bfi_e")), na.rm =T),
+         mean_conscient = mean(c_across(contains("bfi_c")), na.rm = T),
+         mean_neuroticism = mean(c_across(contains("bfi_n")), na.rm = T),
+         mean_agreeable = mean(c_across(contains("bfi_a")), na.rm =T),
+         mean_openness = mean(c_across(contains("bfi_o")), na.rm =T))
+
+
+#Check for violation of the scores, do not take the same vector name as above because if there is some change done in either of them the calculation will be confused.
+
+min_possible_score <- 1  
+max_possible_score <- 6  
+
+#Still issues with this 
+
+data_mean_violation_bfi <- data_mean_bfi |>
+  rowwise() |>
+  mutate(score_violation = ifelse(any(c_across(contains("bfi")) 
+                                      < min_possible_score | c_across(contains("bfi")) 
+                                      >max_possible_score, na.rm = T),
+                                  "yes", 
+                                  "no")) |>
+  ungroup() |>
+  select(unique_id, mean_extroversion, mean_conscient, mean_neuroticism, mean_agreeable, mean_openness,
+         score_violation)
+ 
+
+
+
+
+
+```
+
+
 
 ```{r}
 

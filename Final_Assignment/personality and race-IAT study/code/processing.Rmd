@@ -333,7 +333,6 @@ data_mean_bfi <- dat_reversed_items |>
 min_possible_score <- 1  
 max_possible_score <- 6  
 
-#Still issues with this 
 
 data_mean_violation_bfi <- data_mean_bfi |>
   rowwise() |>
@@ -358,16 +357,157 @@ data_mean_violation_bfi |>
 
 ```
 
+#IAT 
 
-Score the trial-level IAT data using the Greenwald “D” score: Calculate a mean RT (“mean1”) for blocks 3 and 6 (one score using trials from both blocks), a mean RT (“mean2”) for blocks 4 and 7 (one score using trials from both blocks), and the SD of RTs in blocks 3, 4, 6 and 7 (“SD”). To calculate D: D = (mean2 - mean1)/SD. Blocks 1, 2, and 5 are practice blocks and must be discarded.
+witin the study each participant completed an mplicit Association Test assessing implicit racial evaluations between African-American and European-American people. Block 1, 2, 5 are practice blocks and must be discarded for analysis calculations. 
 
+First we check the dataset visually and we see that there are some variables that are not too practical to work with so we clean out the dataset. participant = unique_Id, block = block_number, X3 = block required responses, trial = trial responses, x 5 = trial accuracy x6 = trial reaction time (in ms). After we make sure that the trial_reaction time is still a numeric variable. Since there was the character description within the variable and it got removed, there is a possibility that it lead to conversion issues. 
 
 ```{r}
 
 
+data_iat_corrected <- data_raw_iat |>
+  rename(unique_id = participant, #rename the variables adequately 
+         block_number = block,
+         block_required_responses = x3,
+         trial_responses = trial,
+         trial_accuracy = x5,
+         trial_reaction_time_in_ms = x6) |>
+  slice(-1) #excluding the first row since these represented the description we implied as variable names                above 
+
+#making sure that trial_raction_time_in_ms is a numeric argument, as we have to calculate with it: 
+
+data_iat_corrected$trial_reaction_time_in_ms <- as.numeric(data_iat_corrected$trial_reaction_time_in_ms)
+
+```
+
+
+## Score the trial-level IAT data using the Greenwald “D” score: Calculate a mean RT (“mean1”) for blocks 3 and 6 (one score using trials from both blocks), a mean RT (“mean2”) for blocks 4 and 7 (one score using trials from both blocks), and the SD of RTs in blocks 3, 4, 6 and 7 (“SD”). To calculate D: D = (mean2 - mean1)/SD. Blocks 1, 2, and 5 are practice blocks and must be discarded.
+
+```{r}
+
+#Calculation of mean Reaction Time block 3 and 6: mean1
+
+mean1 <- data_iat_corrected |>
+  filter(block_number %in% c(3, 6)) |> #select relevant rows 
+  group_by(unique_id) |> #group the data by the unique_Id
+  summarize(mean1 = mean(trial_reaction_time_in_ms, na.rm = TRUE)) #calculating mean RT for unique_id
+
+
+#Calculation of mean Reaction Time block 4 and 7: mean2
+
+mean2 <- data_iat_corrected |>
+  filter(block_number %in% c(4, 7)) |>  
+  group_by(unique_id) |> 
+  summarize(mean2 = mean(trial_reaction_time_in_ms, na.rm = TRUE)) 
+
+
+#Calculation of SD Reaction Time in block 3, 4, 6, 7: 
+
+SD <- data_iat_corrected |>
+  filter(block_number %in% c(3, 4, 6, 7)) |>  
+  group_by(unique_id) |> 
+  summarize(SD = sd(trial_reaction_time_in_ms, na.rm = TRUE)) 
+
+
+#D is calculated through (mean2 - mean1)/SD. 
+
+D <- left_join(mean2, mean1, by = "unique_id") |> # we need mean1 and 2 in order to calculate
+  left_join(SD, by = "unique_id") |> #sd is also required for calculation
+  mutate(D = (mean2 - mean1) / SD) |> #creating the new variable
+  select(unique_id, D)
+
+
+#Final dataframe 
+data_iat_score <- D |>
+  left_join(mean1, by = "unique_id") |>
+  left_join(mean2, by = "unique_id") |>
+  left_join(SD, by = "unique_id") 
+
+```
+
+
+###Sanity Check
+
+1. Include a sanity check: check that all D scores are in the range -2 to +2. If not, revise your              implementation of the scoring code.
+
+```{r}
+
+#Define the min and max variable, again do not take the same ones as above
+
+min_range_d <- -2  
+max_range_d <- +2 
+
+data_d_violation <- data_iat_score |>
+  mutate(d_score_range = ifelse(D < min_range_d | D > max_range_d, 
+                                "exclude", 
+                                "include")) 
+
+
+
+#No d_score violations for the dataset 
+data_d_violation |>
+  filter(d_score_range == "exclude") |>
+  select(unique_id) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+
+2. Create an exclusion variable and set participants with incomplete trial level IAT data to “exclude”.        Specifically, IAT should have 120 trials on the critical test blocks (i.e., blocks 3, 4, 6 and 7). Trials
+   on the other (practice) blocks can be discarded.
+
+
+```{r}
+
+data_iat_incomplete <- data_iat_corrected |>
+  group_by(unique_id) |>
+  mutate(trial_count = sum(block_number %in% c(3, 4, 6, 7))) |>
+  ungroup() |>
+  mutate(completed_trials = ifelse(trial_count == 120, "include", "exclude")) |>
+  select(unique_id, completed_trials) %>%
+  distinct()  # Only keep one row per ID as they have multiple rows due to several trials 
+
+
+
+#some individuals do have uncompleted trials and must therefore be excluded  
+data_iat_incomplete |>
+  filter(completed_trials == "exclude") |>
+  select(unique_id) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+Create an exclusion variable for IAT performance: set participants with >10% of the participants trials are < 300ms, or if their accuracy is < than 75%. Only use trials from the critical test blocks when computing these (i.e., blocks 3, 4, 6 and 7).
+
+
+```{r}
+
+data_iat_performance <- data_amp_raw %>%
+  filter(blockcode %in% c(3, 4, 6, 7), trialcode != "instructions") %>%
+  mutate(
+    latency_prob = ifelse(latency < 100, TRUE, FALSE),
+    accuracy_prob = ifelse(accuracy < 0.75, TRUE, FALSE)
+  ) %>%
+  group_by(subject) %>%
+  summarize(
+    proportion_fast_trials_amp = mean(latency_prob),
+    proportion_low_accuracy_amp = mean(accuracy_prob)
+  ) %>%
+  mutate(
+    exclude_amp_performance = ifelse(
+      proportion_fast_trials_amp > 0.10 | proportion_low_accuracy_amp > 0.10,
+      "exclude",
+      "include"
+    )
+  )
+
 
 
 ```
+
 
 
 

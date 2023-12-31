@@ -228,8 +228,7 @@ data_logical_number |>
 ```
 
 
-3. A third sanity check for the Bfi data is provided through checking wheter all participants have complete data for the surveys they completed. First there is a new variable created for each survey, where "include" is assigned if all values in the specified row of the survey are present and non-missing. The "excluded" ones are then filtered out. After putting all of the information together in a new dataframe, subjects that completed fewer than 2 questionnaires are filtered out. This way it is ensured that only absolutely necessary exclusions are carried out, as it might be the case that someone with missing information has 2 questionnaires still completed. In a final step it is joined with the reversed dataframe and the newly added rows are removed what leaves us with a cleaned dataframe. 
-
+3. To perform a third quality check of the BFI data, we ensure that all participants have completed data for    the surveys they filled out. Initially, a new variable is created for each survey and assigned "include"    if all values in the specified row of the survey are present and not missing. We then filter out the        "excluded" observations based on that criterion. After summarizing this information in a new data frame,    the dataset is further refined by excluding people who completed less than two questionnaires. This step    aims to minimize unnecessary exclusions, taking into account that individuals with missing information      may still have completed at least 2 questionnaires. In the final step, this cleaned data frame is merged    with the reversed data frame and all newly added rows are removed, resulting in a refined and cleaned       dataset.
 
 ```{r}
 
@@ -285,22 +284,27 @@ data_combined_exclusion <- dat_reversed_items |>
                                                  completed_q_c, 
                                                  completed_q_n,
                                                  completed_q_a,
-                                                 completed_q_o)))) |>
-  filter(completed_questionnaires >= 2)  
+                                                 completed_q_o))),
+         questionnaire_inclusion = case_when(completed_questionnaires >= 2 ~ 
+                                             "include",
+                                             TRUE ~ "exclude"))
 
 
-#Making a final dataframe with only the ones that should be included
+#Making a final dataframe 
 
 data_completed_exclusion <- dat_reversed_items |>
   left_join(data_combined_exclusion, by = "unique_id") |>
-  rowwise() |>
-  mutate(completed_questionnaires = sum(!is.na(c(completed_q_e, 
-                                                 completed_q_c, 
-                                                 completed_q_n,
-                                                 completed_q_a,
-                                                 completed_q_o)))) |>
-  filter(completed_questionnaires >= 2) |>
-  select(-contains("completed")) # removing the completed labels as they are not adding information to the                                     new dataframe
+  select(-contains("completed_q_"), 
+         -"completed_questionnaires") #removing these for a clean dataset 
+
+
+
+#Check 
+data_completed_exclusion |>
+  filter(questionnaire_inclusion == "exclude") |>
+  select(unique_id) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
 
 ```
 
@@ -333,16 +337,32 @@ max_possible_score <- 6
 
 data_mean_violation_bfi <- data_mean_bfi |>
   rowwise() |>
-  mutate(score_violation = ifelse(any(c_across(contains("bfi")) 
+  mutate(score_violation = ifelse(all(c_across(contains("bfi")) #use all so it is checked for each row
                                       < min_possible_score | c_across(contains("bfi")) 
                                       >max_possible_score, na.rm = T),
-                                  "yes", 
-                                  "no")) |>
+                                  "exclude", 
+                                  "include")) |>
   ungroup() |>
   select(unique_id, mean_extroversion, mean_conscient, mean_neuroticism, mean_agreeable, mean_openness,
          score_violation)
  
 
+
+#No mean violates the principle 
+data_mean_violation_bfi |>
+  filter(score_violation == "exclude") |>
+  select(unique_id) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+
+```
+
+
+Score the trial-level IAT data using the Greenwald “D” score: Calculate a mean RT (“mean1”) for blocks 3 and 6 (one score using trials from both blocks), a mean RT (“mean2”) for blocks 4 and 7 (one score using trials from both blocks), and the SD of RTs in blocks 3, 4, 6 and 7 (“SD”). To calculate D: D = (mean2 - mean1)/SD. Blocks 1, 2, and 5 are practice blocks and must be discarded.
+
+
+```{r}
 
 
 

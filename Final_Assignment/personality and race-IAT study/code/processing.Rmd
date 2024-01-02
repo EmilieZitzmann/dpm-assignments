@@ -60,7 +60,7 @@ Study participants had the option to provide their age and gender, although this
 
 Age and Gender should be extracted from the data frame. As these are both within "variable" we have to create two new variables by using pivot_wider. 
 
-Beforehand we have to check if there is duplicated or NA data within the unique_Id in the raw dataset. By creating the dataframe "check_Id" it becomes apparent that we have duplicated data and data with NA.
+Beforehand we have to check if there is duplicated or NA data within the unique_Id in the raw dataset. By creating the dataframe "check_Id" it becomes apparent that we have duplicated data and data with NA. These are extracted for the new dataframe. 
 
 The missing and duplicated values are extracted in a second step. Values other than the specified ones are set to "other/missing/error" in order to exclude them only at a later point, if needed. 
 
@@ -76,7 +76,7 @@ check_Id <- data_raw_demographics |>
 
 #Creating a new dataset where we exclude the NA and the duplicated rows. Be careful not to just exclude the "missing" ones from above as this would make both unique_id values disappear. 
 
-dat_age_gender <- data_raw_demographics |>
+data_age_gender <- data_raw_demographics |>
   select(unique_id, variable, response) |>
  filter(!duplicated(unique_id) & !is.na(unique_id)) |> #filter out duplicated and NA
   pivot_wider(names_from = variable,
@@ -96,7 +96,7 @@ dat_age_gender <- data_raw_demographics |>
 
 As part of the study, each respondent was asked to complete between two and three subscales of the Big 5 personality inventory.
 
-First it is checked, whether the bfi_dataset has any duplicated rows. This is not the case which is why we will continue working with the raw_bfi dataset. 
+First it is checked, whether the bfi_dataset has any duplicated rows. as this is not the case we will continue by working with the raw bfi dataset directly.  
 
 ```{r}
 
@@ -105,7 +105,6 @@ check_bfi <-  data_raw_bfi |>
 
 
 ```
-
 
 
 ## Reverse Score negatively worded items
@@ -119,7 +118,7 @@ Specific items were worded negatively. These items need to be reversed in order 
 •	openness items: bfi_o7, bfi_o9 
  
 Each value can reach a maximum of 6 and a minimum of 1. In order to return the Items we must remember that the reverted scale is behaving inversely to the positive one so 1 = 6, 2 =5, 3=4, 4=3, 2= 5, 6=1. 
-The easiest way to revert a Scale is  to add 1 to the maximum value in order to subtract the original value from it. This way we get the reversed score value. 
+The easiest way to revert a scale is  to add 1 to the maximum value in order to subtract the original value from it. This way we get the reversed score value. 
 
 To modify the data the mutate() function is used, to apply the function on multiple columns e.g. the produced vector we can use across(). 
 
@@ -128,8 +127,8 @@ To modify the data the mutate() function is used, to apply the function on multi
 vector_reversed_items <- c("bfi_e2","bfi_e5","bfi_e7","bfi_c2","bfi_c4","bfi_c5","bfi_c9","bfi_n2","bfi_n5", "bfi_n7","bfi_a1", "bfi_a3","bfi_a6","bfi_a8","bfi_o7","bfi_o9")
 
 
-dat_reversed_items <- data_raw_bfi |>
-  mutate(across(all_of(vector_reversed_items), ~7 - .)) #"." represents column values that are subtracted                                                            from 7 by ~7. This produces the reverted items. 
+data_reversed_items <- data_raw_bfi |>
+  mutate(across(all_of(vector_reversed_items), ~7 - .)) #"." represents column values that are subtracted                                                            from 7 (by performin ~7). This produces the                                                                 reverted items. 
  
 ```
 
@@ -144,7 +143,7 @@ dat_reversed_items <- data_raw_bfi |>
 ```{r}
 
 #Extroversion
-Matrix_extroversion_reversed <- dat_reversed_items |>
+Matrix_extroversion_reversed <- data_reversed_items |>
   select(contains("bfi_e")) |>
   cor(method = "pearson", use = "complete.obs")
 
@@ -154,7 +153,7 @@ Matrix_extroversion_original <- data_raw_bfi |>
 
 
 #Conscientiousness 
-Matrix_conscient_reversed <- dat_reversed_items |>
+Matrix_conscient_reversed <- data_reversed_items |>
   select(contains("bfi_c")) |>
   cor(method = "pearson", use = "complete.obs")
 
@@ -164,7 +163,7 @@ Matrix_conscient_original <- data_raw_bfi |>
 
 
 #Neuroticism
-Matrix_neuroticism_reversed <- dat_reversed_items |>
+Matrix_neuroticism_reversed <- data_reversed_items |>
   select(contains("bfi_n")) |>
   cor(method = "pearson", use = "complete.obs")
 
@@ -174,7 +173,7 @@ Matrix_neuroticism_original <- data_raw_bfi |>
 
 
 #Agreeableness
-Matrix_agreeable_reversed <- dat_reversed_items |>
+Matrix_agreeable_reversed <- data_reversed_items |>
   select(contains("bfi_a")) |>
   cor(method = "pearson", use = "complete.obs")
 
@@ -184,7 +183,7 @@ Matrix_agreeable_original <- data_raw_bfi |>
 
 
 #Openness
-Matrix_openness_reversed <- dat_reversed_items |>
+Matrix_openness_reversed <- data_reversed_items |>
   select(contains("bfi_o")) |>
   cor(method = "pearson", use = "complete.obs")
 
@@ -195,6 +194,7 @@ Matrix_openness_original <- data_raw_bfi |>
 
 ```
 
+  *Interpretation*: The reversal procedure appears to be effective, as the only remaining negative             correlation can be observed between items bfi_o7 and bfi_o10. In comparison to the original matrix, there    is a substantial reduction in the overall negative correlations. 
 
 
 2. A second sanity check is that the logical minimum (1) and maximum (6) are not violated. In order to check    that an exclusion variable is created that sets participants with impossible data to "exclude". Again       specific information is selected with c_across()
@@ -207,24 +207,29 @@ logical_min <- 1
 logical_max <- 6
 
 #creating the dataset 
-data_logical_number <- dat_reversed_items |>
+data_logical_number <- data_reversed_items |>
   rowwise() |>
-  mutate(logical_number = ifelse(any(!is.na(c_across(contains("bfi"))) & #selected values are not NA
+  mutate(bfi_logical_number_violation = ifelse(any(!is.na(c_across(contains("bfi"))) & #selected values are                                                                                         not NA
                                      (c_across(contains("bfi")) < logical_min | 
                                       c_across(contains("bfi")) > logical_max)),
                                  "exclude",
-                                 "include"))
- 
+                                 "include")) |>
+  ungroup() |> #Should be used after rowwise to avoid unintended consequences for the next operation
+  select(unique_id, bfi_logical_number_violation)
+
+```
+
+  *Interpretation*: To check whether individuals violate the logical minimum or maximum, they can be           identified through filtering. This concerns 3 individuals. The dataset illustrates that they all included    7 in one response, which justifies the exclusion. 
+
+```{r}
 #Check if we have some that violate the minimum and maximum and who it is 
 data_logical_number |>
-  filter(logical_number == "exclude") |>
+  filter(bfi_logical_number_violation == "exclude") |>
   select(unique_id) |>
   kable() |>
   kable_classic(full_width = FALSE)
 
 #After manually checking we can see that they all have "7" in one answer which is why they are excluded
-
-
 ```
 
 
@@ -233,32 +238,32 @@ data_logical_number |>
 ```{r}
 
 #Extroversion
- data_extroversion_exclusion <- dat_reversed_items |> 
+ data_extroversion_exclusion <- data_reversed_items |> 
    rowwise() |> 
    mutate(completed_q_e = ifelse(all(!is.na(c_across(contains("bfi_e")))), "include", "exclude")) |>
    filter(completed_q_e != "exclude") 
  
 #Conscientiousness
-data_conscient_exclusion <- dat_reversed_items |> 
+data_conscient_exclusion <- data_reversed_items |> 
   rowwise() |> 
   mutate(completed_q_c = ifelse(all(!is.na(c_across(contains("bfi_c")))), "include", "exclude")) |> 
   filter(completed_q_c != "exclude")
  
 
 #Neuroticism
-data_neuroticism_exclusion <- dat_reversed_items |> 
+data_neuroticism_exclusion <- data_reversed_items |> 
   rowwise() |> 
   mutate(completed_q_n = ifelse(all(!is.na(c_across(contains("bfi_n")))), "include", "exclude")) |>
   filter(completed_q_n != "exclude")
 
 #Agreeableness
-data_agreeable_exclusion <- dat_reversed_items |> 
+data_agreeable_exclusion <- data_reversed_items |> 
   rowwise() |> 
   mutate(completed_q_a = ifelse(all(!is.na(c_across(contains("bfi_a")))), "include", "exclude")) |>
   filter(completed_q_a != "exclude")
 
 #Openness
-data_openness_exclusion <- dat_reversed_items |> 
+data_openness_exclusion <- data_reversed_items |> 
   rowwise() |> 
   mutate(completed_q_o = ifelse(all(!is.na(c_across(contains("bfi_o")))), "include", "exclude")) |>
   filter(completed_q_o != "exclude")
@@ -267,7 +272,7 @@ data_openness_exclusion <- dat_reversed_items |>
 
 #combining all of the information above within one dataframe and checking whether each person has at least completed 2 Bfi Scales 
 
-data_combined_exclusion <- dat_reversed_items |>
+data_combined_exclusion <- data_reversed_items |>
   select(unique_id) |>
   left_join(data_extroversion_exclusion |>
             select(unique_id, completed_q_e), by = "unique_id") |>
@@ -285,23 +290,25 @@ data_combined_exclusion <- dat_reversed_items |>
                                                  completed_q_n,
                                                  completed_q_a,
                                                  completed_q_o))),
-         questionnaire_inclusion = case_when(completed_questionnaires >= 2 ~ 
+         bfi_questionnaire_inclusion = case_when(completed_questionnaires >= 2 ~ 
                                              "include",
                                              TRUE ~ "exclude"))
 
 
 #Making a final dataframe 
 
-data_completed_exclusion <- dat_reversed_items |>
+data_completed_exclusion <- data_reversed_items |>
   left_join(data_combined_exclusion, by = "unique_id") |>
-  select(-contains("completed_q_"), 
-         -"completed_questionnaires") #removing these for a clean dataset 
+  select(unique_id, bfi_questionnaire_inclusion) 
 
+```
 
+  *Interpretation*: Again, the individuals in question are selected using filter. It turns out that seven      respondents omitted an answer in their questionnaires and therefore completed fewer than 2 of them. This    is evident by checking with the dataset. 
 
-#Check 
+```{r}
+
 data_completed_exclusion |>
-  filter(questionnaire_inclusion == "exclude") |>
+  filter(bfi_questionnaire_inclusion == "exclude") |>
   select(unique_id) |>
   kable() |>
   kable_classic(full_width = FALSE)
@@ -311,15 +318,11 @@ data_completed_exclusion |>
 
 ##Mean score BFI
 
-Mean-score the subscales of the BFI scale. Each participant only got either 2 or 3 subscales.
-Check that the mean scores do not violate the min and max possible score (i.e., first determine this min and max score), and revise your scoring code if it does.
-
-
-We take dat reversed Items but probably after the interpretation we have to be more careful with it 
+The mean values corresponding to the subscales in the Big Five Inventory for subsequent analysis are calculated. To ensure the integrity of the data, it was made sure that the mean values corresponded to the defined minimum and maximum values. 
 
 ```{r}
 
-data_mean_bfi <- dat_reversed_items |> 
+data_mean_bfi <- data_reversed_items |> 
   rowwise() |>
   mutate(mean_extroversion = mean(c_across(contains("bfi_e")), na.rm =T),
          mean_conscient = mean(c_across(contains("bfi_c")), na.rm = T),
@@ -328,7 +331,7 @@ data_mean_bfi <- dat_reversed_items |>
          mean_openness = mean(c_across(contains("bfi_o")), na.rm =T))
 
 
-#Check for violation of the scores, do not take the same vector name as above because if there is some change done in either of them the calculation will be confused.
+#Check for violation of the scores, do not take the same vector name as above because if there is some change done in either of them the calculation will get mixed up.
 
 min_possible_score <- 1  
 max_possible_score <- 6  
@@ -336,35 +339,37 @@ max_possible_score <- 6
 
 data_mean_violation_bfi <- data_mean_bfi |>
   rowwise() |>
-  mutate(score_violation = ifelse(all(c_across(contains("bfi")) #use all so it is checked for each row
+  mutate(bfi_mean_violation = ifelse(all(c_across(contains("bfi")) #use all so it is checked for each row
                                       < min_possible_score | c_across(contains("bfi")) 
                                       >max_possible_score, na.rm = T),
                                   "exclude", 
                                   "include")) |>
   ungroup() |>
   select(unique_id, mean_extroversion, mean_conscient, mean_neuroticism, mean_agreeable, mean_openness,
-         score_violation)
+         bfi_mean_violation)
+
+```
+
+*Interpretation*: There is no individual mean score violating the logical minimum or maximum. 
+
+```{r}
  
-
-
-#No mean violates the principle 
 data_mean_violation_bfi |>
-  filter(score_violation == "exclude") |>
+  filter(bfi_mean_violation == "exclude") |>
   select(unique_id) |>
   kable() |>
   kable_classic(full_width = FALSE)
 
-
 ```
+
 
 #IAT 
 
-witin the study each participant completed an mplicit Association Test assessing implicit racial evaluations between African-American and European-American people. Block 1, 2, 5 are practice blocks and must be discarded for analysis calculations. 
+witin the study each participant completed an Implicit Association Test assessing implicit racial evaluations between African-American and European-American people. Block 1, 2, 5 are practice blocks and must be discarded for analysis calculations. 
 
-First we check the dataset visually and we see that there are some variables that are not too practical to work with so we clean out the dataset. participant = unique_Id, block = block_number, X3 = block required responses, trial = trial responses, x 5 = trial accuracy x6 = trial reaction time (in ms). After we make sure that the trial_reaction time is still a numeric variable. Since there was the character description within the variable and it got removed, there is a possibility that it lead to conversion issues. 
+An initial visual inspection of the dataset revealed that certain variables were only of limited use, therefore these were first adjusted. It was then ensured that "trial_reaction_time" remained a numeric variable. The removal of character labels (the trial reaction time in ms previously located there) within the numerical variable can lead to conversion problems. The same is done fore unique_Id as this has been numerical for the other datasets
 
 ```{r}
-
 
 data_iat_corrected <- data_raw_iat |>
   rename(unique_id = participant, #rename the variables adequately 
@@ -373,16 +378,23 @@ data_iat_corrected <- data_raw_iat |>
          trial_responses = trial,
          trial_accuracy = x5,
          trial_reaction_time_in_ms = x6) |>
-  slice(-1) #excluding the first row since these represented the description we implied as variable names                above 
+  tail(-1) |>
+  mutate(unique_id = as.numeric(unique_id),
+         trial_reaction_time_in_ms = as.numeric(trial_reaction_time_in_ms))
 
-#making sure that trial_raction_time_in_ms is a numeric argument, as we have to calculate with it: 
+  
+
+#making sure that trial_raction_time_in_ms is a numeric argument: 
 
 data_iat_corrected$trial_reaction_time_in_ms <- as.numeric(data_iat_corrected$trial_reaction_time_in_ms)
+
+
 
 ```
 
 
-## Score the trial-level IAT data using the Greenwald “D” score: Calculate a mean RT (“mean1”) for blocks 3 and 6 (one score using trials from both blocks), a mean RT (“mean2”) for blocks 4 and 7 (one score using trials from both blocks), and the SD of RTs in blocks 3, 4, 6 and 7 (“SD”). To calculate D: D = (mean2 - mean1)/SD. Blocks 1, 2, and 5 are practice blocks and must be discarded.
+## First, the average response time ("mean1") is determined for the trials in blocks 3 and 6. Next, another mean response time ("mean2") is computed for the trials in blocks 4 and 7. The standard deviation of the response times in blocks 3, 4, 6 and 7 ("SD") and the Greenwald score "D" are calculated. 
+
 
 ```{r}
 
@@ -423,13 +435,12 @@ data_iat_score <- D |>
   left_join(mean1, by = "unique_id") |>
   left_join(mean2, by = "unique_id") |>
   left_join(SD, by = "unique_id") 
-
 ```
 
 
 ###Sanity Check
 
-1. Include a sanity check: check that all D scores are in the range -2 to +2. If not, revise your              implementation of the scoring code.
+1. A first sanity check verifies that each D score falls within the specified logical range of -2 to +2
 
 ```{r}
 
@@ -441,11 +452,13 @@ max_range_d <- +2
 data_d_violation <- data_iat_score |>
   mutate(d_score_range = ifelse(D < min_range_d | D > max_range_d, 
                                 "exclude", 
-                                "include")) 
+                                "include")) |>
+  select(unique_id, d_score_range)
+```
 
+*interpretation*:This data set does not contain any violations of the logical minimum and maximum within the D-score. 
 
-
-#No d_score violations for the dataset 
+```{r}
 data_d_violation |>
   filter(d_score_range == "exclude") |>
   select(unique_id) |>
@@ -455,9 +468,7 @@ data_d_violation |>
 ```
 
 
-2. Create an exclusion variable and set participants with incomplete trial level IAT data to “exclude”.        Specifically, IAT should have 120 trials on the critical test blocks (i.e., blocks 3, 4, 6 and 7). Trials
-   on the other (practice) blocks can be discarded.
-
+2. An exclusion variable is created that sets participants with incomplete IAT data at trial level to          "exclude". The IAT should contain 120 trials in the relevant test blocks required for the analysis.
 
 ```{r}
 
@@ -465,64 +476,89 @@ data_iat_incomplete <- data_iat_corrected |>
   group_by(unique_id) |>
   mutate(trial_count = sum(block_number %in% c(3, 4, 6, 7))) |>
   ungroup() |>
-  mutate(completed_trials = ifelse(trial_count == 120, "include", "exclude")) |>
-  select(unique_id, completed_trials) %>%
+  mutate(iat_completed_trials = ifelse(trial_count == 120, "include", "exclude")) |>
+  select(unique_id, iat_completed_trials) %>%
   distinct()  # Only keep one row per ID as they have multiple rows due to several trials 
 
+```
 
+*Interpretation* : Some individuals have incompleted trial data and must therefore be set to "exclude"
 
-#some individuals do have uncompleted trials and must therefore be excluded  
+```{r}
+
 data_iat_incomplete |>
-  filter(completed_trials == "exclude") |>
+  filter(iat_completed_trials == "exclude") |>
   select(unique_id) |>
   kable() |>
   kable_classic(full_width = FALSE)
-
 ```
 
-3. Create an exclusion variable for IAT performance: set participants with  >10% of the participants trials    are < 300ms, or if their accuracy is < than 75%. Only use trials from the critical test blocks when         computing these (i.e., blocks 3, 4, 6 and 7).
 
+3. Participants who have over 10% of their trials with reaction times less than 300                            milliseconds or an accuracy below 75% should be excluded. In order to do so, two variables that contain     the corresponding exclusion criteria are created. A proportion of these is then calculated so that          individuals can be identified for exclusion. 
 
 ```{r}
 
-data_iat_corrected_performance <- data_iat_corrected |>
-  filter(block_number %in% c(3, 4, 6, 7)) |>
-  mutate(low_reaction_time = ifelse(trial_reaction_time_in_ms < 300, TRUE, FALSE),
-         low_accuracy = ifelse(trial_accuracy == "incorrect", TRUE, FALSE)) |>
+data_iat_exclusion <- data_iat_corrected |>
+  filter(block_number %in% c(3, 4, 6, 7)) |> #Selecting the blocks 
+  mutate(low_reaction_time = ifelse(trial_reaction_time_in_ms < 300, TRUE, FALSE), #low reaction time 
+         low_accuracy = ifelse(trial_accuracy == "incorrect", TRUE, FALSE)) |> #T only if incorrect
   group_by(unique_id) |>
-  summarize(proportion_fast_trials_iat = mean(low_reaction_time),
-            proportion_low_accuracy_iat = mean(low_accuracy)) |>
-  mutate(exclude_accuracy = ifelse(proportion_fast_trials_iat >= 0.10 | 
-                                   proportion_low_accuracy_iat > 0.25,
+  summarize(proportion_fast_reaction_time = mean(low_reaction_time), #calculate the proportions 
+            proportion_low_accuracy_iat = mean(low_accuracy)) |> 
+  mutate(exclude_accuracy = ifelse(proportion_fast_reaction_time >= 0.10 | 
+                                   proportion_low_accuracy_iat >= 0.75, 
                                    "exclude",
                                    "include"))
-
 ```
 
+*Interpretation*: One individual should be excluded  
 
-
+```{r}
+data_iat_exclusion|>
+  filter(exclude_accuracy == "exclude") |>
+  select(unique_id) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+```
 
 # Combine
 
+The datasets are to be merged into a single dataframe, ensuring each participant is represented by a single row. The datasets to combine are:
+
+•	data_age_gender
+•	data_reversed_items
+•	data_logical_number
+•	data_completed exclusion
+•	data_mean_violation_bfi
+•	data_iat_score
+•	data_d_violation
+•	data_iat_incomplete
+•	data_iat_exclusion
+
+
 ```{r}
 
-# combine all dfs created in the previous chunks
-data_processed_temp <- dat_age_gender |>
-  full_join(data_selfreport_scored, by = "subject") |> 
-  full_join(data_amp_score, by = "subject") |> 
-  full_join(data_amp_performance_criteria, by = "subject") |>
-  full_join(data_amp_completeness, by = "subject")
-
+data_processed_all <- data_age_gender |>
+  full_join(data_reversed_items, by = "unique_id") |>
+  full_join(data_logical_number, by ="unique_id") |>
+  full_join(data_completed_exclusion, by= "unique_id") |>
+  full_join(data_mean_violation_bfi, by = "unique_id") |>
+  full_join(data_iat_score, by = "unique_id") |>
+  full_join(data_d_violation, by = "unique_id") |> #It contains no exclude but for the sake of completeness
+  full_join(data_iat_incomplete, by = "unique_id") |>
+  full_join(data_iat_exclusion, by = "unique_id")
+  
+  
 # flag all subjects with more than one row in the wide-format data. these should be excluded in the analysis.
-# a more elaborate approach would be to track down the individual dupicate cases and determine which of the mulitiple cases should be retained. 
-data_processed_duplicates <- data_processed_temp |>
-  count(subject) |>
+
+data_processed_duplicates <- data_processed_all |>
+  count(unique_id) |>
   mutate(exclude_duplicate_data = if_else(n > 1, "exclude", "include")) |>
   select(-n)
 
 # join in the duplicates df
-data_processed_before_exclusions <- data_processed_temp |>
-  full_join(data_processed_duplicates, by = "subject")
+data_processed_before_exclusions <- data_processed_all |>
+  full_join(data_processed_duplicates, by = "unique_id")
 
 ```
 
@@ -532,20 +568,33 @@ data_processed_before_exclusions <- data_processed_temp |>
 
 # create a master exclude_participant variable
 data_processed <- data_processed_before_exclusions |>
-  mutate(exclude_participant = case_when(tolower(age) == "test" ~ "exclude",
-                                         tolower(gender) == "test" ~ "exclude",
-                                         is.na(mean_evaluation) ~ "exclude",
-                                         # in this case we will exclude participants with missing demographics data or outcomes measures data. 
-                                         # Note that "list-wise exclusions" like this aren't always justified, as missingness often isn't at random. 
-                                         # How to treat missing data is a  whole area of work in itself, which we wont cover here.
-                                         is.na(age) ~ "exclude", 
-                                         is.na(gender) ~ "exclude",
-                                         exclude_amp_performance == "exclude" ~ "exclude",
-                                         exclude_duplicate_data == "exclude" ~ "exclude",
-                                         exclude_amp_completeness == "exclude" ~ "exclude", 
-                                         TRUE ~ "include"))
+  mutate(exclude_participant = case_when(is.na(bfi_logical_number_violation) |
+                                         is.na(bfi_questionnaire_inclusion) |
+                                         is.na(bfi_mean_violation) |
+                                         is.na(d_score_range) |
+                                         is.na(iat_completed_trials) |
+                                         is.na(exclude_accuracy)
+                                         ~ "exclude",
+                                         bfi_logical_number_violation == "exclude" ~ "exclude",
+                                         bfi_questionnaire_inclusion == "exclude" ~ "exclude",
+                                         bfi_mean_violation == "exclude" ~ "exclude",
+                                         d_score_range == "exclude" ~ "exclude",
+                                         iat_completed_trials == "exclude" ~ "exclude",
+                                         exclude_accuracy == "exclude" ~ "exclude",
+                                         TRUE ~ "include")) 
+#Find out how many got filtered out 
+
+filtered_count <- data_processed %>%
+  group_by(exclude_participant) %>%
+  summarize(count = n())
+
+# Display the result
+print(filtered_count)
+
 
 ```
+
+*Interpretation*: 164 is not too bad as we have 179 participants in the datasets where the unique id is only counted once. so we excluded 15 participants. 
 
 # Write to disk
 
@@ -561,37 +610,17 @@ write_csv(data_processed, "../data/processed/data_processed.csv")
 
 # Create codebook template for the processed data
 
-If it has not already been created, this code write the codebook template to disk. 
-
-\TODO The template should then be filled in manually with descriptions of each variable so that someone else could understand what these variables represent. 
-
-Be sure to ALWAYS do it, since people forget the labels, the maximum and minimum values etc. We should also specify what they should be (numeric etc.)
-
-
-I filled out some parts of the codebook but I am not sure whether it is visible on Github:)
 
 ```{r}
 
-if(!file.exists("../data/processed/data_processed_codebook.xlsx")){
-  # convert the column names to a df
+if(!file.exists("../data/processed/data_processed_codebook.xlsx")){ # convert the column names to a df
   codebook_template <- data.frame(variable = colnames(data_processed)) |>
-    mutate(explanation = NA)
-  # write to disk as an excel file
-  write.xlsx(codebook_template, file = "../data/processed/data_processed_codebook.xlsx")
-}
+    mutate(explanation = NA) 
+  write.xlsx(codebook_template, 
+             file = "../data/processed/data_processed_codebook.xlsx")} # write to disk as an excel file
 
 ```
 
-Note that there are other ways of automatically creating more elaborate codebooks from your datasets. These often contain information about min/max/mean/SD, distribution, etc. For example:
-
-- Ruben Arslan's {codebook}
-  - [R package with How-Tos](https://rubenarslan.github.io/codebook/)
-  - [Tutorial](https://rubenarslan.github.io/codebook/articles/codebook_tutorial.html)
-  - [Article](https://journals.sagepub.com/doi/full/10.1177/2515245919838783)
-- Petersen & Ekstrøm's {dataReporter}
-  - [Article](https://www.jstatsoft.org/article/view/v090i06)
-  - [Blog](https://sandsynligvis.dk/2017/08/21/datamaid-your-personal-assistant-for-cleaning-up-the-data-cleaning-process/)
-  - [R package](https://cran.r-project.org/web/packages/dataReporter/index.html)
 
 # Session info
 

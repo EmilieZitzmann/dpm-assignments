@@ -2,7 +2,7 @@
 title: "Examining the relationship between the big-5 personality facets and implicit racial attitudes"
 subtitle: "Data processing"
 author: "Template: Ian Hussey; content: Emilie"
-date: "`2023-12-28`"
+date: "`2024-01-03`"
 output:
   html_document:
     code_folding: hide
@@ -60,17 +60,14 @@ Study participants had the option to provide their age and gender, although this
 
 Age and Gender should be extracted from the dataframe. As these are both within 'variable' two new variables named 'Age' and 'Gender' have to be created by using pivot_wider(). 
 
-Prior to this, it is necessary to inspect the raw dataset for duplicated or NA data within the 'unique_Id'. The resulting 'check_Id' dataframe reveals the presence of both duplicated and NA data, which is then extracted into a new dataframe.
-
-In a subsequent step, missing and duplicated values are isolated. Any values not meeting the specified criteria are assigned as 'other/missing/error' for potential exclusion at a later stage, if required.
-
+Prior to this, it is necessary to inspect the raw dataset for NA data within the 'unique_Id'. The resulting 'check_Id' dataframe reveals the presence of NA data, which is then removed from the new dataframe. In a subsequent step, missing values are isolated. Any values not meeting the specified criteria are assigned as 'other/missing/error' for potential exclusion at a later stage, if required.
 
 ```{r}
 
-#Dataframe to check whether we have NA or duplicated unique_Id
+#Dataframe to check whether we have NA in unique_Id
 check_Id <- data_raw_demographics |>
   select(unique_id, variable, response) |>
-  mutate(exclude_Id= ifelse (is.na(unique_id) | duplicated(unique_id) |duplicated(unique_id, fromLast = T), 
+  mutate(exclude_Id= ifelse (is.na(unique_id), 
                              "missing", 
                              "inlcude")) |>
   group_by(unique_id) 
@@ -79,7 +76,7 @@ check_Id <- data_raw_demographics |>
 
 data_age_gender <- data_raw_demographics |>
   select(unique_id, variable, response) |>
- filter(!duplicated(unique_id) & !is.na(unique_id)) |> #filter out duplicated and NA
+ filter(!is.na(unique_id)) |> #filter out the NA 
   pivot_wider(names_from = variable,
               values_from = response) |> 
   rename(gender = sex) |>
@@ -564,6 +561,7 @@ data_processed_before_exclusions <- data_processed_all |>
 ```{r}
 
 # create a master exclude_participant variable
+
 data_processed <- data_processed_before_exclusions |>
   mutate(exclude_participant = case_when(is.na(bfi_logical_number_violation) |
                                          is.na(bfi_questionnaire_inclusion) |
@@ -581,8 +579,8 @@ data_processed <- data_processed_before_exclusions |>
                                          TRUE ~ "include")) 
 
 #Check: how many participants got filtered out? 
-filtered_count <- data_processed %>%
-  group_by(exclude_participant) %>%
+filtered_count <- data_processed |>
+  group_by(exclude_participant) |>
   summarize(count = n())
 
 # Display the result

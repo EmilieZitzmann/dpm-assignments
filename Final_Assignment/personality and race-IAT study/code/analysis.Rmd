@@ -2,7 +2,7 @@
 title: "Examining the relationship between the big-5 personality facets and implicit racial attitudes"
 subtitle: "Analysis"
 author: "Template: Ian Hussey; content: Emilie"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: "`2024-01-03')`"
 output:
   html_document:
     code_folding: hide
@@ -43,6 +43,7 @@ Load the processed data and apply the global exclusions.
 
 data_processed <- read_csv("../data/processed/data_processed.csv")
 
+#Only keep the participants flagged with 'include'. 
 data_processed_after_exclusions <- data_processed |>
   filter(exclude_participant == "include")
 
@@ -57,7 +58,7 @@ data_processed_after_exclusions <- data_processed |>
 data_processed |>
   count(name = "n") |>
   kable() |>
-  add_header_above(header = c("Whole sample" = 1)) |> # note that you can add header rows to tables like this. The "1" indicates the number of columns the header should span. The sum of these numbers must equal the number of columns or you'll get an error.
+  add_header_above(header = c( "Sample before exclusions" = 1)) |> 
   kable_classic(full_width = FALSE)
 
 ```
@@ -76,7 +77,9 @@ data_processed_after_exclusions |>
 
 ```
 
-## Age
+## Demographic Summary: Age 
+
+Create demographics tables that summarise the mean and SD age, and the frequency and percentage of men vs women in the sample. Report the proportion of participants for which each demographics variable was available.
 
 ```{r}
 
@@ -88,6 +91,60 @@ data_processed_after_exclusions |>
   kable() |>
   add_header_above(header = c("Age" = 2)) |>
   kable_classic(full_width = FALSE)
+
+
+#Percentage of available data on age
+
+library(dplyr)
+library(janitor)
+library(knitr)
+
+# Assuming data_processed_after_exclusions is your dataset
+
+ data_processed_after_exclusions |>
+   filter(!is.numeric(age) & age %in% c("other/missing/error")) |>
+   mutate(Percent = paste0(round_half_up((n / nrow(data_processed_after_exclusions)) * 100, 1), "%"),
+          Age = stringr::str_to_sentence(age)) %>%
+  kable() %>%
+  kable_classic(full_width = FALSE)
+
+
+```
+
+
+##Demographic summary: Gender
+
+```{r}
+
+demographics_gender <- data_processed_after_exclusions |>
+  select(gender) |>
+  na.omit(T) |> 
+  tabyl(gender) |>
+  adorn_pct_formatting(digits = 2)
+
+#If it is in the same format with kable: 
+
+data_processed_after_exclusions |> 
+  rename(Gender = gender) |>
+  group_by(Gender) |> 
+  summarise(n = n()) |> 
+  mutate(Percent = paste0(round_half_up((n / sum(n)) * 100, 1), "%")) |>
+  mutate(Gender = stringr::str_to_sentence(Gender)) |> # Change the case of the Gender variable so that it prints nicely
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+  
+
+```
+
+
+## Demographic summary: Available information 
+Report the proportion of participants for which each demographics variable was available.
+
+```{r}
+
+
+
 
 ```
 

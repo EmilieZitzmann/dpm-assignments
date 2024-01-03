@@ -58,11 +58,12 @@ Study participants had the option to provide their age and gender, although this
 
 ## Extraction of Age and Gender
 
-Age and Gender should be extracted from the data frame. As these are both within "variable" we have to create two new variables by using pivot_wider. 
+Age and Gender should be extracted from the dataframe. As these are both within 'variable' two new variables named 'Age' and 'Gender' have to be created by using pivot_wider(). 
 
-Beforehand we have to check if there is duplicated or NA data within the unique_Id in the raw dataset. By creating the dataframe "check_Id" it becomes apparent that we have duplicated data and data with NA. These are extracted for the new dataframe. 
+Prior to this, it is necessary to inspect the raw dataset for duplicated or NA data within the 'unique_Id'. The resulting 'check_Id' dataframe reveals the presence of both duplicated and NA data, which is then extracted into a new dataframe.
 
-The missing and duplicated values are extracted in a second step. Values other than the specified ones are set to "other/missing/error" in order to exclude them only at a later point, if needed. 
+In a subsequent step, missing and duplicated values are isolated. Any values not meeting the specified criteria are assigned as 'other/missing/error' for potential exclusion at a later stage, if required.
+
 
 ```{r}
 
@@ -74,7 +75,7 @@ check_Id <- data_raw_demographics |>
                              "inlcude")) |>
   group_by(unique_id) 
 
-#Creating a new dataset where we exclude the NA and the duplicated rows. Be careful not to just exclude the "missing" ones from above as this would make both unique_id values disappear. 
+#Creating a new dataset where we exclude the NA and the duplicated rows. Be careful not to just exclude the 'missing' ones from above as this would make both unique_id values disappear. 
 
 data_age_gender <- data_raw_demographics |>
   select(unique_id, variable, response) |>
@@ -96,13 +97,12 @@ data_age_gender <- data_raw_demographics |>
 
 As part of the study, each respondent was asked to complete between two and three subscales of the Big 5 personality inventory.
 
-First it is checked, whether the bfi_dataset has any duplicated rows. as this is not the case we will continue by working with the raw bfi dataset directly.  
+A check is first carried out to determine whether there are duplicate lines in the bfi_dataset. As no duplicates could be detected, the raw bfi dataset is worked with directly in the following steps.
 
 ```{r}
 
 check_bfi <-  data_raw_bfi |> 
   distinct() 
-
 
 ```
 
@@ -111,11 +111,11 @@ check_bfi <-  data_raw_bfi |>
 
 Specific items were worded negatively. These items need to be reversed in order to be suitable for analysis. This applies to the items: 
 
-•	the extroversion scale items: bfi_e2, bfi_e5, bfi_e7
-•	conscientiousness items: bfi_c2, bfi_c4, bfi_c5, bfi_c9
-•	neuroticism items: bfi_n2, bfi_n5, bfi_n7
-•	agreeableness items: bfi_a1, bfi_a3, bfi_a6, bfi_a8
-•	openness items: bfi_o7, bfi_o9 
+-	the extroversion scale items: bfi_e2, bfi_e5, bfi_e7
+-	conscientiousness items: bfi_c2, bfi_c4, bfi_c5, bfi_c9
+-	neuroticism items: bfi_n2, bfi_n5, bfi_n7
+-	agreeableness items: bfi_a1, bfi_a3, bfi_a6, bfi_a8
+-	openness items: bfi_o7, bfi_o9 
  
 Each value can reach a maximum of 6 and a minimum of 1. In order to return the Items we must remember that the reverted scale is behaving inversely to the positive one so 1 = 6, 2 =5, 3=4, 4=3, 2= 5, 6=1. 
 The easiest way to revert a scale is  to add 1 to the maximum value in order to subtract the original value from it. This way we get the reversed score value. 
@@ -128,7 +128,7 @@ vector_reversed_items <- c("bfi_e2","bfi_e5","bfi_e7","bfi_c2","bfi_c4","bfi_c5"
 
 
 data_reversed_items <- data_raw_bfi |>
-  mutate(across(all_of(vector_reversed_items), ~7 - .)) #"." represents column values that are subtracted                                                            from 7 (by performin ~7). This produces the                                                                 reverted items. 
+  mutate(across(all_of(vector_reversed_items), ~7 - .)) #'.' represents column values that are subtracted                                                            from 7 (by performing ~7). This produces the                                                                reverted items. 
  
 ```
 
@@ -136,9 +136,9 @@ data_reversed_items <- data_raw_bfi |>
 ###Sanity Check 
 
 1. To check whether the reversals are likely to be correct a correlation matrix for each variable is           created. If the correlation is negative or rather low it could indicate that the reversing was not          carried out properly. As the Big Five tend to be normally distributed the Pearson correlation is used to
-   calculate the matrix. The "use" within the correlation function is set to complete.obs, which means that    variables who are missing data are not included. This is important considering that the participants only    filled out two or three of the subscales which is producing some NA for each row, hindering to calculate    the correlation correctly. 
+   calculate the matrix. The 'use' within the correlation function is set to complete.obs, which means that    variables that contain missing data are not included. This is important considering that the participants    only filled out two or three of the subscales which is producing some NA for each row, hindering to         calculate the correlation correctly. 
 
-   In order to make sure that the correlation stayed the same the correlation matrix is calculated with the    original dataset and compared with the reversed one. 
+   In order to make sure that the newly created correlation matrix with the reverted items produces less/no    negative results, a matrix is calculated for the original dataset and compared with the matrix of the       reversed one. 
 
 ```{r}
 
@@ -197,7 +197,7 @@ Matrix_openness_original <- data_raw_bfi |>
   *Interpretation*: The reversal procedure appears to be effective, as the only remaining negative             correlation can be observed between items bfi_o7 and bfi_o10. In comparison to the original matrix, there    is a substantial reduction in the overall negative correlations. 
 
 
-2. A second sanity check is that the logical minimum (1) and maximum (6) are not violated. In order to check    that an exclusion variable is created that sets participants with impossible data to "exclude". Again       specific information is selected with c_across()
+2. A second sanity check is that the logical minimum (1) and maximum (6) are not violated. In order to check    that an exclusion variable is created that sets participants with impossible data to 'exclude'. Again       specific information is selected with c_across()
 
 ```{r}
 
@@ -222,18 +222,17 @@ data_logical_number <- data_reversed_items |>
   *Interpretation*: To check whether individuals violate the logical minimum or maximum, they can be           identified through filtering. This concerns 3 individuals. The dataset illustrates that they all included    7 in one response, which justifies the exclusion. 
 
 ```{r}
-#Check if we have some that violate the minimum and maximum and who it is 
+
 data_logical_number |>
   filter(bfi_logical_number_violation == "exclude") |>
   select(unique_id) |>
   kable() |>
   kable_classic(full_width = FALSE)
 
-#After manually checking we can see that they all have "7" in one answer which is why they are excluded
 ```
 
 
-3. To perform a third quality check of the BFI data, we ensure that all participants have completed data for    the surveys they filled out. Initially, a new variable is created for each survey and assigned "include"    if all values in the specified row of the survey are present and not missing. We then filter out the        "excluded" observations based on that criterion. After summarizing this information in a new data frame,    the dataset is further refined by excluding people who completed less than two questionnaires. This step    aims to minimize unnecessary exclusions, taking into account that individuals with missing information      may still have completed at least 2 questionnaires. In the final step, this cleaned data frame is merged    with the reversed data frame and all newly added rows are removed, resulting in a refined and cleaned       dataset.
+3. To perform a third quality check of the BFI data, we ensure that all participants have completed data for    the surveys they filled out. Initially, a new variable is created for each survey and assigned 'include'    if all values in the specified row of the survey are present and not missing. We then filter out the        'excluded' observations based on that criterion. After summarizing this information in a new data frame,    the dataset is further refined by excluding people who completed less than two questionnaires. This step    aims to minimize unnecessary exclusions, taking into account that individuals with missing information      may still have completed at least 2 questionnaires. In the final step, this cleaned data frame is merged    with the reversed data frame and all newly added rows are removed, resulting in a refined and cleaned       dataset.
 
 ```{r}
 
@@ -365,9 +364,9 @@ data_mean_violation_bfi |>
 
 #IAT 
 
-witin the study each participant completed an Implicit Association Test assessing implicit racial evaluations between African-American and European-American people. Block 1, 2, 5 are practice blocks and must be discarded for analysis calculations. 
+Within the study each participant completed an Implicit Association Test assessing implicit racial evaluations between African-American and European-American people. Block 1, 2, 5 are practice blocks and must be discarded for analysis calculations. 
 
-An initial visual inspection of the dataset revealed that certain variables were only of limited use, therefore these were first adjusted. It was then ensured that "trial_reaction_time" remained a numeric variable. The removal of character labels (the trial reaction time in ms previously located there) within the numerical variable can lead to conversion problems. The same is done fore unique_Id as this has been numerical for the other datasets
+An initial visual inspection of the dataset revealed that certain variables were only of limited use, therefore these were first adjusted. It was then ensured that 'trial_reaction_time' remained a numeric variable. The removal of character labels (the trial reaction time in ms previously located there) within the numerical variable can lead to conversion problems. The same is done fore 'unique_Id' as this has been numerical for the other datasets. 
 
 ```{r}
 
@@ -379,22 +378,15 @@ data_iat_corrected <- data_raw_iat |>
          trial_accuracy = x5,
          trial_reaction_time_in_ms = x6) |>
   tail(-1) |>
-  mutate(unique_id = as.numeric(unique_id),
+  mutate(unique_id = as.numeric(unique_id), #Making sure trial reaction and unique id are numeric 
          trial_reaction_time_in_ms = as.numeric(trial_reaction_time_in_ms))
-
-  
-
-#making sure that trial_raction_time_in_ms is a numeric argument: 
-
-data_iat_corrected$trial_reaction_time_in_ms <- as.numeric(data_iat_corrected$trial_reaction_time_in_ms)
-
-
 
 ```
 
 
-## First, the average response time ("mean1") is determined for the trials in blocks 3 and 6. Next, another mean response time ("mean2") is computed for the trials in blocks 4 and 7. The standard deviation of the response times in blocks 3, 4, 6 and 7 ("SD") and the Greenwald score "D" are calculated. 
+## Scoring the trial-level data 
 
+First, the average response time ('mean1') is determined for the trials in blocks 3 and 6. Next, another mean response time ('mean2') is computed for the trials in blocks 4 and 7. The standard deviation of the response times in blocks 3, 4, 6 and 7 ('SD') and the Greenwald score 'D' are calculated. 
 
 ```{r}
 
@@ -430,7 +422,7 @@ D <- left_join(mean2, mean1, by = "unique_id") |> # we need mean1 and 2 in order
   select(unique_id, D)
 
 
-#Final dataframe 
+#Final dataframe with all scores 
 data_iat_score <- D |>
   left_join(mean1, by = "unique_id") |>
   left_join(mean2, by = "unique_id") |>
@@ -456,9 +448,10 @@ data_d_violation <- data_iat_score |>
   select(unique_id, d_score_range)
 ```
 
-*interpretation*:This data set does not contain any violations of the logical minimum and maximum within the D-score. 
+  *interpretation*: This data set does not contain any violations of the logical minimum and maximum within    the D-score. 
 
 ```{r}
+
 data_d_violation |>
   filter(d_score_range == "exclude") |>
   select(unique_id) |>
@@ -468,7 +461,9 @@ data_d_violation |>
 ```
 
 
-2. An exclusion variable is created that sets participants with incomplete IAT data at trial level to          "exclude". The IAT should contain 120 trials in the relevant test blocks required for the analysis.
+## Exclusion Variable for incomplete IAT data
+
+An exclusion variable is created that sets participants with incomplete IAT data at trial level to        'exclude'. The IAT should contain 120 trials in the relevant test blocks required for the analysis.
 
 ```{r}
 
@@ -482,7 +477,7 @@ data_iat_incomplete <- data_iat_corrected |>
 
 ```
 
-*Interpretation* : Some individuals have incompleted trial data and must therefore be set to "exclude"
+*Interpretation* : Some individuals have uncompleted trial data and must therefore be set to 'exclude'.
 
 ```{r}
 
@@ -494,7 +489,9 @@ data_iat_incomplete |>
 ```
 
 
-3. Participants who have over 10% of their trials with reaction times less than 300                            milliseconds or an accuracy below 75% should be excluded. In order to do so, two variables that contain     the corresponding exclusion criteria are created. A proportion of these is then calculated so that          individuals can be identified for exclusion. 
+## Exclusion Variable for IAT performance
+
+Participants who have over 10% of their trials with reaction times less than 300                            milliseconds or an accuracy below 75% should be excluded. In order to do so, two variables that contain     the corresponding exclusion criteria are created. A proportion of these is then calculated so that          individuals can be identified for exclusion. 
 
 ```{r}
 
@@ -505,13 +502,13 @@ data_iat_exclusion <- data_iat_corrected |>
   group_by(unique_id) |>
   summarize(proportion_fast_reaction_time = mean(low_reaction_time), #calculate the proportions 
             proportion_low_accuracy_iat = mean(low_accuracy)) |> 
-  mutate(exclude_accuracy = ifelse(proportion_fast_reaction_time >= 0.10 | 
-                                   proportion_low_accuracy_iat >= 0.75, 
+  mutate(exclude_accuracy = ifelse(proportion_fast_reaction_time >= 0.10 | # 10 %
+                                   proportion_low_accuracy_iat >= 0.75, # 75 %
                                    "exclude",
                                    "include"))
 ```
 
-*Interpretation*: One individual should be excluded  
+*Interpretation*: One person has to be excluded due to two main reasons. First, the accuracy is only         38.33%, which indicates a high proportion of 'incorrect' trials. Secondly, about 46.67% of the trials       have a reaction time of less than 300 ms, which also exceeds the acceptable threshold. Thus, this person    should be excluded from further analysis.
 
 ```{r}
 data_iat_exclusion|>
@@ -525,15 +522,15 @@ data_iat_exclusion|>
 
 The datasets are to be merged into a single dataframe, ensuring each participant is represented by a single row. The datasets to combine are:
 
-•	data_age_gender
-•	data_reversed_items
-•	data_logical_number
-•	data_completed exclusion
-•	data_mean_violation_bfi
-•	data_iat_score
-•	data_d_violation
-•	data_iat_incomplete
-•	data_iat_exclusion
+-	data_age_gender
+-	data_reversed_items
+-	data_logical_number
+-	data_completed exclusion
+-	data_mean_violation_bfi
+-	data_iat_score
+-	data_d_violation
+-	data_iat_incomplete
+-	data_iat_exclusion
 
 
 ```{r}
@@ -582,8 +579,8 @@ data_processed <- data_processed_before_exclusions |>
                                          iat_completed_trials == "exclude" ~ "exclude",
                                          exclude_accuracy == "exclude" ~ "exclude",
                                          TRUE ~ "include")) 
-#Find out how many got filtered out 
 
+#Check: how many participants got filtered out? 
 filtered_count <- data_processed %>%
   group_by(exclude_participant) %>%
   summarize(count = n())
@@ -594,13 +591,13 @@ print(filtered_count)
 
 ```
 
-*Interpretation*: 164 is not too bad as we have 179 participants in the datasets where the unique id is only counted once. so we excluded 15 participants. 
+*Interpretation*: Given 179 participants in the original dataset, where each unique ID is only listed once,  the result of 164 participants is reasonable. We excluded 15 participants by means of the analyses listed   above.
 
 # Write to disk
 
 ```{r}
 
-# in case this dir doesn't exist, create it
+# in case this dir doesn't exist it is created
 dir.create("../data/processed/")
 
 # save data to disk in that dir
@@ -608,8 +605,7 @@ write_csv(data_processed, "../data/processed/data_processed.csv")
 
 ```
 
-# Create codebook template for the processed data
-
+# Codebook for the processed data
 
 ```{r}
 

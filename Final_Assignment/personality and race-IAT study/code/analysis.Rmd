@@ -232,6 +232,96 @@ TODO/ Include Interpretation
 *Interpretation*: 
 
 
+#Descriptive Plots: 
+
+##Distribution Histogram 
+
+###Extroversion 
+
+```{r}
+
+ggplot(data_processed_after_exclusions, aes(x = mean_extroversion)) +
+  geom_histogram(binwidth = 0.2,
+                 boundary = 0,
+                 fill = "#69b3a2",  #Adjust the color for filling the histogram bars 
+                 color = "#404080",  # Adjust the color for the borders 
+                 alpha = 0.8) +  # Added transparecy in order to make the plot look a bit cleaner 
+  xlab("Mean Score Distribution for Extroversion") +
+  ylab("Frequency") +
+  theme_minimal() +  
+  scale_x_continuous(breaks = seq(1, 7, 0.5), #Location of thick marks specified: Code creates breaks every 0.5 increments
+                     limits = c(1, 7), expand = c(0, 0)) +  # X-Axis is limited to a range of 1 to 7 (only values within                                                                this range are shown).Limits = 0 means x is shown as                                                                      specified
+  coord_cartesian(xlim = c(1, 7)) + #zoom in to the important datapoints
+  theme(panel.grid.minor = element_blank(),
+        axis.title = element_text(size = 12, face = "bold"),  #Axis title
+        axis.text = element_text(size = 10),  # Axis text
+        plot.title = element_text(hjust = 0.5, size = 14),  # Centered plot title
+        legend.position = "none") #remove legend 
+       
+
+```
+
+### Conscientiousness
+```{r}
+
+ggplot(data_processed_after_exclusions, aes(x = mean_conscient)) +
+  geom_histogram(binwidth = 0.2,
+                 boundary = 0,
+                 fill = "#69b3a2",  #Adjust the color for filling the histogram bars 
+                 color = "#404080",  # Adjust the color for the borders 
+                 alpha = 0.8) +  # Added transparecy in order to make the plot look a bit cleaner 
+  xlab("Mean Score Distribution for Conscientiousness") +
+  ylab("Frequency") +
+  theme_minimal() +  
+  scale_x_continuous(breaks = seq(1, 7, 0.5), #Location of thick marks specified: Code creates breaks every 0.5 increments
+                     limits = c(1, 7), expand = c(0, 0)) +  # X-Axis is limited to a range of 1 to 7 (only values within                                                                this range are shown).Limits = 0 means x is shown as                                                                      specified
+  coord_cartesian(xlim = c(1, 7)) + #zoom in to the important datapoints
+  theme(panel.grid.minor = element_blank(),
+        axis.title = element_text(size = 12, face = "bold"),  #Axis title
+        axis.text = element_text(size = 10),  # Axis text
+        plot.title = element_text(hjust = 0.5, size = 14),  # Centered plot title
+        legend.position = "none") #remove legend 
+       
+ 
+```
+
+### Neuroticism 
+```{r}
+
+ggplot(data_processed_after_exclusions, aes(x = mean_neuroticism)) +
+  geom_histogram(binwidth = 0.2,
+                 boundary = 0,
+                 fill = "#69b3a2",  
+                 color = "#404080", 
+                 alpha = 0.8) +   
+  xlab("Mean Score Distribution for Neuroticism") +
+  ylab("Frequency") +
+  theme_minimal() +  
+  scale_x_continuous(breaks = seq(1, 7, 0.5), 
+                     limits = c(1, 7), expand = c(0, 0)) +
+  coord_cartesian(xlim = c(1, 7)) + 
+  theme(panel.grid.minor = element_blank(),
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5, size = 14),
+        legend.position = "none")
+       
+ 
+```
+
+
+Create series of histograms of the distribution of scores on each of the BFI subscales and the IAT.
+
+
+```{r}
+
+```
+
+
+
+
+
+
 # Descriptives
 
 Descriptive statistics and plots of the measures (excluding the demographics variables)
@@ -239,36 +329,6 @@ Descriptive statistics and plots of the measures (excluding the demographics var
 ## Self-reported evaluations
 
 ### Descriptive stats
-
-```{r}
-
-# overall self-reported evaluations
-dat_mean_ratings <- data_processed_after_exclusions |>
-  summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
-            SD = sd(mean_evaluation, na.rm = TRUE),
-            n = n()) |>
-  mutate(group = "Full sample")
-
-# self-reported evaluations by gender category
-dat_mean_ratings_by_gender <- data_processed_after_exclusions |>
-  group_by(group = gender) |>
-  summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
-            SD = sd(mean_evaluation, na.rm = TRUE),
-            n = n())
-
-# combine both into one table
-bind_rows(dat_mean_ratings,
-          dat_mean_ratings_by_gender) |>
-  select(Subset = group, Mean, SD, n) |> # select variables of interest, and rename one 
-  mutate(Subset = stringr::str_to_sentence(Subset)) |> # Change the case of the Subset variable so that it prints nicely
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  add_header_above(header = c(" " = 1, "Self-reported evaluations" = 3)) |>
-  kable_classic(full_width = FALSE)
-
-```
-
-### Descriptive plot
 
 ```{r}
 
@@ -286,6 +346,13 @@ ggplot(data_processed_after_exclusions, aes(x = mean_evaluation)) +
 
 ```
 
+
+
+Create series of histograms of the distribution of scores on each of the BFI subscales and the IAT.
+
+
+
+
 ## AMP evaluations
 
 ### Descriptive stats
@@ -294,9 +361,7 @@ ggplot(data_processed_after_exclusions, aes(x = mean_evaluation)) +
 
 ```{r}
 
-### Descriptive stats
 
-# all self evluations 
 
 dat_mean_ratings <- data_processed_after_exclusions |>
   summarise(Mean = mean(mean_evaluation, na.rm = TRUE),

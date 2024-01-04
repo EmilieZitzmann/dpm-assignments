@@ -32,6 +32,7 @@ library(knitr)
 library(kableExtra)
 library(janitor)
 library(scales)
+library(psych) #For Cronbachs Alpha 
 
 ```
 
@@ -79,7 +80,7 @@ data_processed_after_exclusions |>
 
 ## Demographic Summary: Age 
 
-Create demographics tables that summarise the mean and SD age, and the frequency and percentage of men vs women in the sample. Report the proportion of participants for which each demographics variable was available.
+Mean value of age and the standard deviation thereof are listed. As demographic information was given voluntarily, the percentage of respondents who did not provide this information is listed additionally. 
 
 ```{r}
 
@@ -88,24 +89,25 @@ data_processed_after_exclusions |>
   summarise(Mean = mean(age, na.rm = TRUE),
             SD = sd(age, na.rm = TRUE)) |>
   mutate_all(.funs = janitor::round_half_up, digits = 1) |>
-  kable() |>
+  kable(align = "lccc") |>
   add_header_above(header = c("Age" = 2)) |>
   kable_classic(full_width = FALSE)
 
 
-#Percentage of available data on age
 
-library(dplyr)
-library(janitor)
-library(knitr)
+#Percentage of provided information
 
-# Assuming data_processed_after_exclusions is your dataset
-
- data_processed_after_exclusions |>
-   filter(!is.numeric(age) & age %in% c("other/missing/error")) |>
-   mutate(Percent = paste0(round_half_up((n / nrow(data_processed_after_exclusions)) * 100, 1), "%"),
-          Age = stringr::str_to_sentence(age)) %>%
-  kable() %>%
+data_processed_after_exclusions |>
+  summarise(Total_Participants = n(),
+            Age_available = sum(!is.na(as.numeric(age))),
+            Percentage_Age_available = paste0(
+              janitor::round_half_up((Age_available / Total_Participants) * 100, digits = 1), "%"),
+            Age_not_available = Total_Participants - Age_available,
+            Percentage_Age_not_available = paste0(
+              janitor::round_half_up((Age_not_available / Total_Participants) * 100, digits = 1), "%")) |>
+  select(-Total_Participants) |>
+  kable(align= "lccc") |> #locate the numbers in the middle as the percentage calculation puts them left which messes up                             the overall appearance 
+  add_header_above(header = c("Age" = 4)) |>
   kable_classic(full_width = FALSE)
 
 
@@ -113,6 +115,8 @@ library(knitr)
 
 
 ##Demographic summary: Gender
+
+The total number and percentage of participants categorized as female, male and "other/missing/missing" are calculated.
 
 ```{r}
 
@@ -130,38 +134,103 @@ data_processed_after_exclusions |>
   summarise(n = n()) |> 
   mutate(Percent = paste0(round_half_up((n / sum(n)) * 100, 1), "%")) |>
   mutate(Gender = stringr::str_to_sentence(Gender)) |> # Change the case of the Gender variable so that it prints nicely
-  kable() |>
+  kable(align = "lccc") |>
   kable_classic(full_width = FALSE)
 
-  
-
 ```
-
 
 ## Demographic summary: Available information 
-Report the proportion of participants for which each demographics variable was available.
+
+Percentage and total number are calculated according to the participants who provided both demographic information, i.e. age and gender.
 
 ```{r}
 
-
-
-
-```
-
-## Gender
-
-```{r}
-
-data_processed_after_exclusions |> 
+data_processed_after_exclusions |>
   rename(Gender = gender) |>
-  group_by(Gender) |> 
-  summarise(n = n()) |> 
-  mutate(Percent = paste0(round_half_up((n / sum(n)) * 100, 1), "%")) |>
-  mutate(Gender = stringr::str_to_sentence(Gender)) |> # Change the case of the Gender variable so that it prints nicely
-  kable() |>
+  group_by(Gender, age) |>
+  summarise(n = n()) |>
+  summarise( Total_Participants = sum(n),
+             Gender_and_Age_available = sum(n > 0),
+             Percentage_Both_Available =paste0(janitor::round_half_up((Gender_and_Age_available / Total_Participants) * 100, digits =1), "%")) |>
+  mutate_at(c("Total_Participants", "Gender_and_Age_available"), 
+            .funs = janitor::round_half_up, digits = 2) |>
+  kable(align = "lccc") |>
+  add_header_above(header = c("Percentage of Participants with Age and Gender Demographics" = 4)) |>
   kable_classic(full_width = FALSE)
 
+
 ```
+
+#BFI 
+
+##Cronbachs Alpha 
+
+Calculate Cronbach’s alpha for each of the BFI subscales.
+
+### Extroversion
+
+```{r}
+
+cronbach_alpha_extroversion <- data_processed_after_exclusions |>
+  dplyr::select(contains("bfi_e")) |>
+  alpha()
+
+print(cronbach_alpha_extroversion)
+
+```
+
+###Conscientiousness 
+
+```{r}
+
+cronbach_alpha_conscient <- data_processed_after_exclusions |>
+  dplyr::select(contains("bfi_c"))|>
+  alpha()
+
+print(cronbach_alpha_conscient)
+
+```
+
+###Neuroticism 
+
+```{r}
+
+cronbach_alpha_neuroticism <- data_processed_after_exclusions |>
+  dplyr::select(contains("bfi_n")) |>
+  alpha()
+
+print(cronbach_alpha_neuroticism)
+
+```
+
+###Agreeableness
+
+```{r}
+
+cronbach_alpha_agreeable <- data_processed_after_exclusions |>
+  dplyr::select(contains("bfi_a")) |>
+  alpha()
+
+print(cronbach_alpha_agreeable)
+
+
+```
+
+###Openness
+
+```{r}
+
+cronbach_alpha_openness <- data_processed_after_exclusions |>
+  dplyr::select(contains("bfi_o")) |>
+  alpha()
+
+print(cronbach_alpha_openness)
+
+```
+
+TODO/ Include Interpretation 
+*Interpretation*: 
+
 
 # Descriptives
 

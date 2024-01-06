@@ -33,6 +33,7 @@ library(kableExtra)
 library(janitor)
 library(scales)
 library(psych) #For Cronbachs Alpha 
+library(report) #For report in Hypothesis Testing
 
 ```
 
@@ -167,7 +168,8 @@ data_processed_after_exclusions |>
 
 Calculate Cronbach’s alpha for each of the BFI subscales.
 
-### Extroversion
+
+###Extroversion
 
 ```{r}
 
@@ -245,7 +247,7 @@ ggplot(data_processed_after_exclusions, aes(x = mean_extroversion)) +
                  boundary = 0,
                  fill = "#69b3a2",  #Adjust the color for filling the histogram bars 
                  color = "#404080",  # Adjust the color for the borders 
-                 alpha = 0.8) +  # Added transparecy in order to make the plot look a bit cleaner 
+                 alpha = 0.8) + # Added transparecy in order to make the plot look a bit cleaner 
   xlab("Mean Score Distribution for Extroversion") +
   ylab("Frequency") +
   theme_minimal() +  
@@ -308,17 +310,185 @@ ggplot(data_processed_after_exclusions, aes(x = mean_neuroticism)) +
        
  
 ```
-
-
-Create series of histograms of the distribution of scores on each of the BFI subscales and the IAT.
+###Agreeableness 
 
 
 ```{r}
 
+ggplot(data_processed_after_exclusions, aes(x = mean_agreeable)) +
+  geom_histogram(binwidth = 0.2,
+                 boundary = 0,
+                 fill = "#69b3a2",  
+                 color = "#404080", 
+                 alpha = 0.8) +   
+  xlab("Mean Score Distribution for Agreeableness") +
+  ylab("Frequency") +
+  theme_minimal() +  
+  scale_x_continuous(breaks = seq(1, 7, 0.5), 
+                     limits = c(1, 7), expand = c(0, 0)) +
+  coord_cartesian(xlim = c(1, 7)) + 
+  theme(panel.grid.minor = element_blank(),
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5, size = 14),
+        legend.position = "none")
 ```
 
+### Openness 
+
+```{r}
+
+ggplot(data_processed_after_exclusions, aes(x = mean_openness)) +
+  geom_histogram(binwidth = 0.2,
+                 boundary = 0,
+                 fill = "#69b3a2",  
+                 color = "#404080", 
+                 alpha = 0.8) +   
+  xlab("Mean Score Distribution for Openness") +
+  ylab("Frequency") +
+  theme_minimal() +  
+  scale_x_continuous(breaks = seq(1, 7, 0.5), 
+                     limits = c(1, 7), expand = c(0, 0)) +
+  coord_cartesian(xlim = c(1, 7)) + 
+  theme(panel.grid.minor = element_blank(),
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5, size = 14),
+        legend.position = "none")
+
+```
+
+Create series of histograms of the distribution of scores on each of the BFI subscales and the IAT.
+
+```{r}
+
+# Create the histogram with the normal distribution lines
+ggplot(data_processed_after_exclusions, aes(x = D)) +
+  geom_histogram(binwidth = 0.08,
+                 boundary = 0,
+                 fill = "#69b3a2",
+                 color = "#404080",
+                 alpha = 0.8) +
+  xlab("Distribution of the IAT Cowald D Score") +
+  ylab("Frequency") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(-2, 2, 0.5),
+                     limits = c(-3, 3),
+                     expand = c(0, 0)) +
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme(panel.grid.minor = element_blank(),
+        axis.title = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5, size = 14),
+        legend.position = "none")
+
+```
+
+# Correlation Table 
+
+Create a table with a correlation matrix of the Pearson’s r correlations between the IAT and the BFI subscales rounded to two decimal places.
+
+```{r}
+# Calculate correlations and add them as new columns
+
+bfi_iat_corr_matrix <- data_processed_after_exclusions |>
+  select(D, 
+         starts_with("mean_")) |>
+  summarise(across(.cols = starts_with("mean_"), #specifies columns where the function is applied
+                .fns = ~ cor(D, ., method = "pearson", use ="complete.obs"), #defining the function by tilde and what it should do. Calculated the corr between each selected mean function and the D. The dot represents the columns so each one is calculated. Across is used to apply to multiple columns and summarise because we want only one column and not several--> mutate does 164 columns  
+                .names= "cor_{.col}")) |> #naming pattern for the new columns 
+  round(2) #rounds to two decimal places 
 
 
+#With added p value of the correlation
+bfi_iat_corr_matrix <- data_processed_after_exclusions |>
+  select(D, starts_with("mean_")) |>
+  summarise(across(.cols = starts_with("mean_"),
+                .fns = ~ cor(D, ., use = "complete.obs"),
+                .names = "cor_{.col}"),
+         across(.cols = starts_with("mean_"),
+                .fns = ~ cor.test(D, ., method ="pearson", use = "complete.obs")$p.value,
+                .names = "p_value_{.col}")) |>
+  round(2) 
+ 
+
+```
+
+##Hypothesis testing
+
+Run a t-test to test the hypothesis that men and women differ on their scores on the IAT. Report and interpret the results using {report}.
+
+
+```{r}
+
+data_h1_testing <- data_processed_after_exclusions |>
+   filter(gender %in% c("f", "m"))
+
+
+#Specify the information within the t test because otherwhise it produces a warning. The warning does not affect the calculation but still it is better to specify   
+H1_Result <- t.test(data_h1_testing$D ~ data_h1_testing$gender,data = data_h1_testing)
+
+
+#Since we are interested in a general difference regardless of direction we put alternative = "two sided"
+report(H1_Result, alternative = "two sided")
+
+
+
+#Different functions of report 
+report_table(H1_Result)
+report_effectsize(H1_Result)
+report_text(H1_Result)
+
+
+```
+
+#Regression Analysis: 
+
+Run a series of regressions to test the hypotheses that each BFI subscale predicts IAT scores. Run separate regressions for each subscale rather than a multiple regression. Report and interpret the results using {report}.
+
+```{r}
+
+#Extroversion 
+Regression_Extroversion <- lm(D ~ mean_extroversion, data= data_processed_after_exclusions)
+
+#Conscientiousness
+Regression_Conscient <- lm(D ~ mean_conscient, data = data_processed_after_exclusions)
+
+#Neuroticism
+Regression_Neuroticism <- lm(D ~ mean_neuroticism, data = data_processed_after_exclusions)
+
+#Agreeableness
+Regression_Agreeable <- lm(D ~ mean_agreeable, data= data_processed_after_exclusions)
+
+#Openness 
+Regression_Openness <- lm(D ~ mean_openness, data = data_processed_after_exclusions)
+
+#Report the regressions 
+report(Regression_Extroversion)
+
+report(Regression_Conscient)
+  
+report(Regression_Neuroticism)
+
+report(Regression_Agreeable)
+
+report(Regression_Openness)
+
+
+```
+
+*Interpretation*: 
+
+
+#Plots
+
+Create series of scatter plots of how BFI subscale scores predict IAT scores. Add regression lines. These plots therefore illustrate the same results as the regressions above. Make the plots presentable and publication quality- you may decide the details of this with one exception: Extreme scores on the IAT (defined as participants whose scores in the top and bottom 10% of IAT scores) should use a triangular shape rather than a dot. A single combined plot should be created, containing 5 component plots, with the personality facet being examined in each clearly labelled. This plot should be printed in the html file but also saved to disk as both png/pdf.
+
+
+```{r}
+
+
+```
 
 
 
@@ -346,9 +516,6 @@ ggplot(data_processed_after_exclusions, aes(x = mean_evaluation)) +
 
 ```
 
-
-
-Create series of histograms of the distribution of scores on each of the BFI subscales and the IAT.
 
 
 

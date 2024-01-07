@@ -67,7 +67,7 @@ data_processed |>
 
 ## Sample size after exclusions
 
-Sample used in subsequent analyses
+Sample used in subsequent analyses.
 
 ```{r}
 
@@ -94,8 +94,6 @@ data_processed_after_exclusions |>
   add_header_above(header = c("Age" = 2)) |>
   kable_classic(full_width = FALSE)
 
-
-
 #Percentage of provided information
 
 data_processed_after_exclusions |>
@@ -110,7 +108,6 @@ data_processed_after_exclusions |>
   kable(align= "lccc") |> #locate the numbers in the middle as the percentage calculation puts them left which messes up                             the overall appearance 
   add_header_above(header = c("Age" = 4)) |>
   kable_classic(full_width = FALSE)
-
 
 ```
 
@@ -127,14 +124,13 @@ demographics_gender <- data_processed_after_exclusions |>
   tabyl(gender) |>
   adorn_pct_formatting(digits = 2)
 
-#If it is in the same format with kable: 
+#Calculation using the same format as above, without assigning a new variable
 
 data_processed_after_exclusions |> 
   rename(Gender = gender) |>
   group_by(Gender) |> 
   summarise(n = n()) |> 
   mutate(Percent = paste0(round_half_up((n / sum(n)) * 100, 1), "%")) |>
-  mutate(Gender = stringr::str_to_sentence(Gender)) |> # Change the case of the Gender variable so that it prints nicely
   kable(align = "lccc") |>
   kable_classic(full_width = FALSE)
 
@@ -148,6 +144,7 @@ Percentage and total number are calculated according to the participants who pro
 
 data_processed_after_exclusions |>
   rename(Gender = gender) |>
+  filter(!(Gender %in% c("other/missing/error"))) |> #as this variable indicates no information it is                                                            filtered out
   group_by(Gender, age) |>
   summarise(n = n()) |>
   summarise( Total_Participants = sum(n),
@@ -166,7 +163,7 @@ data_processed_after_exclusions |>
 
 ##Cronbachs Alpha 
 
-Calculate Cronbach’s alpha for each of the BFI subscales.
+Cronbach's alpha is calculated for each BFI subscale. This parameter is an important value to calculate as it provides an indication of the so-called internal consistency of a questionnaire. It indicates the extent to which each subscale with its group of items captures the underlying latent construct, i.e. how well the BFI subscale depicts the respective trait. Therefore, Cronbach's alpha serves an important role in the assessment of the reliability of tests, as it provides information about the accuracy of a measurement. 
 
 
 ###Extroversion
@@ -179,7 +176,12 @@ cronbach_alpha_extroversion <- data_processed_after_exclusions |>
 
 print(cronbach_alpha_extroversion)
 
+
+
 ```
+
+*Interpretation*: Cronbach's alpha for extroversion equals 0.81. The value can be obtained under "raw_alpha". Although an alpha of over 0.8 is considered good, it is important to note that no standardized values for assessing alpha have been established. Therefore, values of 0.8 are occasionally described as merely acceptable or even very good. By comparing the items individually, it can be concluded that they all show comparable alpha values, with item bfi_e5 having the lowest and item bfi_e3 showing the highest alpha. However, as all of them are situated in a similar range, it seems that a more detailed analysis of the items is superfluous. Furthermore, the confidence interval can provide information about the quality of alpha, whereby the lower value of 0.76 still indicates a rather high overall value. 
+
 
 ###Conscientiousness 
 
@@ -193,6 +195,8 @@ print(cronbach_alpha_conscient)
 
 ```
 
+*interpretation*: The rounded alpha score of 0.8 indicates a sound value in this category again. The items correlate closely with each other, so that a conclusion about the construct of conscientiousness appears justifiable within subsequent analysis. Nevertheless, it must be emphasized that individual items perform lower compared to others. In particular, bfi_c1 and bfi_c8 show a significantly lower alpha value relative to the other items. It could therefore be advisable to examine these items further, regardless of the overall alpha value. 
+
 ###Neuroticism 
 
 ```{r}
@@ -204,6 +208,8 @@ cronbach_alpha_neuroticism <- data_processed_after_exclusions |>
 print(cronbach_alpha_neuroticism)
 
 ```
+
+*Interpretation*: The Cronbachs alpha of 0.79 can be classified as acceptable to good. Except for one item, the eight items show a similarly high alpha and the lower limit within the confidence interval of 0.73 can also be considered acceptable. Nevertheless, item bfi_n6 appears to have a considerably lower value compared to the other items. Again, it might be advisable to check the item further in order to identify a reason behind this. 
 
 ###Agreeableness
 
@@ -217,6 +223,8 @@ print(cronbach_alpha_agreeable)
 
 
 ```
+*Interpretation*: Similarly, the alpha of 0.78 can be classified as acceptable to good. Item bfi_a7 appears to perform slightly better than the others, but all other items appear to have similarly good inter-item correlations. The lower confidence interval of 0.73 likewise shows an acceptable value. 
+
 
 ###Openness
 
@@ -230,13 +238,14 @@ print(cronbach_alpha_openness)
 
 ```
 
-TODO/ Include Interpretation 
-*Interpretation*: 
+*Interpretation*: Both Cronbach's alpha of 0.81 and a lower confidence interval value of 0.76 can be regarded as acceptable and/or good. 
 
 
-#Descriptive Plots: 
+#Descriptive Plots
 
-##Distribution Histogram 
+## BFI Distribution Histograms 
+
+A series of histograms illustrates the distribution of the average values across the BFI subscales. Participants rated each item on a scale from 1 to 6. 
 
 ###Extroversion 
 
@@ -248,90 +257,101 @@ ggplot(data_processed_after_exclusions, aes(x = mean_extroversion)) +
                  fill = "#69b3a2",  #Adjust the color for filling the histogram bars 
                  color = "#404080",  # Adjust the color for the borders 
                  alpha = 0.8) + # Added transparecy in order to make the plot look a bit cleaner 
-  xlab("Mean Score Distribution for Extroversion") +
+  xlab("Mean Score") + 
   ylab("Frequency") +
   theme_minimal() +  
   scale_x_continuous(breaks = seq(1, 7, 0.5), #Location of thick marks specified: Code creates breaks every 0.5 increments
-                     limits = c(1, 7), expand = c(0, 0)) +  # X-Axis is limited to a range of 1 to 7 (only values within                                                                this range are shown).Limits = 0 means x is shown as                                                                      specified
+                     limits = c(1, 7), expand = c(0, 0)) +  # X-Axis is limited to a range of 1 to 7 (only                                                               values within  this range are shown).Limits =                                                               0 means x is shown as specified
   coord_cartesian(xlim = c(1, 7)) + #zoom in to the important datapoints
   theme(panel.grid.minor = element_blank(),
-        axis.title = element_text(size = 12, face = "bold"),  #Axis title
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15)), #Adjust x title as it                                                                                        is very close to the                                                                                        scale
+        axis.title.y = element_text(size = 12, face = "bold"), #y axis is set to the same opstics as x 
         axis.text = element_text(size = 10),  # Axis text
-        plot.title = element_text(hjust = 0.5, size = 14),  # Centered plot title
-        legend.position = "none") #remove legend 
+        legend.position = "none") + #remove the legend 
+  ggtitle("Mean Score Distribution for Extroversion") +  # Add a title 
+  theme(plot.title = element_text(hjust = 0.4, size = 14, margin = margin(b = 20))) #Depending of the                                                                                           distribution the title                                                                                      looks a bit better                                                                                        with hjust 0.4 or 0.5  
        
 
 ```
 
 ### Conscientiousness
+
 ```{r}
 
 ggplot(data_processed_after_exclusions, aes(x = mean_conscient)) +
   geom_histogram(binwidth = 0.2,
                  boundary = 0,
-                 fill = "#69b3a2",  #Adjust the color for filling the histogram bars 
-                 color = "#404080",  # Adjust the color for the borders 
-                 alpha = 0.8) +  # Added transparecy in order to make the plot look a bit cleaner 
-  xlab("Mean Score Distribution for Conscientiousness") +
+                 fill = "#69b3a2",   
+                 color = "#404080",  
+                 alpha = 0.8) +   
+  xlab("Mean Score") +
   ylab("Frequency") +
   theme_minimal() +  
-  scale_x_continuous(breaks = seq(1, 7, 0.5), #Location of thick marks specified: Code creates breaks every 0.5 increments
-                     limits = c(1, 7), expand = c(0, 0)) +  # X-Axis is limited to a range of 1 to 7 (only values within                                                                this range are shown).Limits = 0 means x is shown as                                                                      specified
-  coord_cartesian(xlim = c(1, 7)) + #zoom in to the important datapoints
+  scale_x_continuous(breaks = seq(1, 7, 0.5), 
+                     limits = c(1, 7), expand = c(0, 0)) +                                                
+  coord_cartesian(xlim = c(1, 7)) + 
   theme(panel.grid.minor = element_blank(),
-        axis.title = element_text(size = 12, face = "bold"),  #Axis title
-        axis.text = element_text(size = 10),  # Axis text
-        plot.title = element_text(hjust = 0.5, size = 14),  # Centered plot title
-        legend.position = "none") #remove legend 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15)), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),  
+        legend.position = "none") + 
+  ggtitle("Mean Score Distribution for Conscientiousness") + 
+  theme(plot.title = element_text(hjust = 0.4, size = 14, margin = margin(b = 20)))  
        
  
 ```
 
 ### Neuroticism 
+
 ```{r}
 
 ggplot(data_processed_after_exclusions, aes(x = mean_neuroticism)) +
   geom_histogram(binwidth = 0.2,
                  boundary = 0,
-                 fill = "#69b3a2",  
-                 color = "#404080", 
+                 fill = "#69b3a2",   
+                 color = "#404080",  
                  alpha = 0.8) +   
-  xlab("Mean Score Distribution for Neuroticism") +
+  xlab("Mean Score") +
   ylab("Frequency") +
   theme_minimal() +  
   scale_x_continuous(breaks = seq(1, 7, 0.5), 
-                     limits = c(1, 7), expand = c(0, 0)) +
+                     limits = c(1, 7), expand = c(0, 0)) +                                                
   coord_cartesian(xlim = c(1, 7)) + 
   theme(panel.grid.minor = element_blank(),
-        axis.title = element_text(size = 12, face = "bold"),  
-        axis.text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5, size = 14),
-        legend.position = "none")
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15)), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),  
+        legend.position = "none") + 
+  ggtitle("Mean Score Distribution for Neuroticism") + 
+  theme(plot.title = element_text(hjust = 0.5, size = 14, margin = margin(b = 20))) 
        
  
 ```
-###Agreeableness 
 
+###Agreeableness 
 
 ```{r}
 
 ggplot(data_processed_after_exclusions, aes(x = mean_agreeable)) +
   geom_histogram(binwidth = 0.2,
                  boundary = 0,
-                 fill = "#69b3a2",  
-                 color = "#404080", 
+                 fill = "#69b3a2",   
+                 color = "#404080",  
                  alpha = 0.8) +   
-  xlab("Mean Score Distribution for Agreeableness") +
+  xlab("Mean Score") +
   ylab("Frequency") +
   theme_minimal() +  
   scale_x_continuous(breaks = seq(1, 7, 0.5), 
-                     limits = c(1, 7), expand = c(0, 0)) +
+                     limits = c(1, 7), expand = c(0, 0)) +                                                
   coord_cartesian(xlim = c(1, 7)) + 
   theme(panel.grid.minor = element_blank(),
-        axis.title = element_text(size = 12, face = "bold"),  
-        axis.text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5, size = 14),
-        legend.position = "none")
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15)), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),  
+        legend.position = "none") + 
+  ggtitle("Mean Score Distribution for Agreeableness") + 
+  theme(plot.title = element_text(hjust = 0.4, size = 14, margin = margin(b = 20))) 
+
 ```
 
 ### Openness 
@@ -341,82 +361,84 @@ ggplot(data_processed_after_exclusions, aes(x = mean_agreeable)) +
 ggplot(data_processed_after_exclusions, aes(x = mean_openness)) +
   geom_histogram(binwidth = 0.2,
                  boundary = 0,
-                 fill = "#69b3a2",  
-                 color = "#404080", 
+                 fill = "#69b3a2",   
+                 color = "#404080",  
                  alpha = 0.8) +   
-  xlab("Mean Score Distribution for Openness") +
+  xlab("Mean Score") +
   ylab("Frequency") +
   theme_minimal() +  
   scale_x_continuous(breaks = seq(1, 7, 0.5), 
-                     limits = c(1, 7), expand = c(0, 0)) +
+                     limits = c(1, 7), expand = c(0, 0)) +                                                
   coord_cartesian(xlim = c(1, 7)) + 
   theme(panel.grid.minor = element_blank(),
-        axis.title = element_text(size = 12, face = "bold"),  
-        axis.text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5, size = 14),
-        legend.position = "none")
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15)), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),  
+        legend.position = "none") + 
+  ggtitle("Mean Score Distribution for Openness") + 
+  theme(plot.title = element_text(hjust = 0.4, size = 14, margin = margin(b = 20))) 
 
 ```
 
-Create series of histograms of the distribution of scores on each of the BFI subscales and the IAT.
+## IAT Distribution Histogram 
+
+Distribution of the implicit association test is illustrated by the Greenwald D score. The score can range between -2 and +2. 
 
 ```{r}
 
-# Create the histogram with the normal distribution lines
 ggplot(data_processed_after_exclusions, aes(x = D)) +
-  geom_histogram(binwidth = 0.08,
+  geom_histogram(binwidth = 0.05,
                  boundary = 0,
                  fill = "#69b3a2",
                  color = "#404080",
                  alpha = 0.8) +
-  xlab("Distribution of the IAT Cowald D Score") +
+  xlab("Kowald D Score") +
   ylab("Frequency") +
   theme_minimal() +
   scale_x_continuous(breaks = seq(-2, 2, 0.5),
                      limits = c(-3, 3),
                      expand = c(0, 0)) +
-  coord_cartesian(xlim = c(-3, 3)) +
-  theme(panel.grid.minor = element_blank(),
-        axis.title = element_text(size = 12, face = "bold"),
+  coord_cartesian(xlim = c(-2, 2)) +
+  theme(panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.45), 
+        axis.title.y = element_text(size = 12, face = "bold"),
         axis.text = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5, size = 14),
         legend.position = "none")
 
 ```
 
 # Correlation Table 
 
-Create a table with a correlation matrix of the Pearson’s r correlations between the IAT and the BFI subscales rounded to two decimal places.
+A correlation matrix of individual subscales of the BFI with the IAT D-Score is generated. As a result, it is possible to test whether implicit stereotypes correlate with certain personality traits. Pearson correlation is used in the calculation, as the Big Five have been described as normally distributed in previous research. This correlation indicates the relationship between two variables and is therefore suitable for illustrating whether and to what extent IAT and individual Big Five traits are related according to the BFI. To check whether the calculated correlations are significant, P-values are added to the table. 
 
 ```{r}
-# Calculate correlations and add them as new columns
 
 bfi_iat_corr_matrix <- data_processed_after_exclusions |>
   select(D, 
          starts_with("mean_")) |>
-  summarise(across(.cols = starts_with("mean_"), #specifies columns where the function is applied
-                .fns = ~ cor(D, ., method = "pearson", use ="complete.obs"), #defining the function by tilde and what it should do. Calculated the corr between each selected mean function and the D. The dot represents the columns so each one is calculated. Across is used to apply to multiple columns and summarise because we want only one column and not several--> mutate does 164 columns  
-                .names= "cor_{.col}")) |> #naming pattern for the new columns 
-  round(2) #rounds to two decimal places 
-
-
-#With added p value of the correlation
-bfi_iat_corr_matrix <- data_processed_after_exclusions |>
-  select(D, starts_with("mean_")) |>
-  summarise(across(.cols = starts_with("mean_"),
-                .fns = ~ cor(D, ., use = "complete.obs"),
-                .names = "cor_{.col}"),
-         across(.cols = starts_with("mean_"),
-                .fns = ~ cor.test(D, ., method ="pearson", use = "complete.obs")$p.value,
-                .names = "p_value_{.col}")) |>
-  round(2) 
- 
+  summarise(across(.cols = starts_with("mean_"), #Specifying columns the function is applied to 
+                .fns = ~ cor(D, ., use = "complete.obs"), #~ defines a function and what it should perform                                                            in this case the correlation between each                                                                  selected mean and D is calculated by column                                                                (represented by the dot). Summarise is applied                                                             to be left with one summarising column for all 
+                .names = "cor_{.col}"), #naming pattern for the columns
+         across(.cols = starts_with("mean_"), #selectts each column that starts with mean
+                .fns = ~ cor.test(D, ., #same as above ~ marks the function that is applied. In this case                                           pearson correlation p value is calculated for each selected column
+                                  method ="pearson", use = "complete.obs")$p.value, 
+                .names = "p_value_{.col}")) |> #specifies the names for the resulting columns 
+  round(2) |> #rounding to two decimal places 
+  #modify the dataset so it looks better
+  pivot_longer(cols = everything(), #select all columns to pivot
+               names_to = c(".value", "variable"), #names of the columns after the pivot. 
+               names_pattern = "(.+)_(.+)") #extracting all of the information that has an _
 
 ```
 
-##Hypothesis testing
+*Interpretation*: None of the correlations seemed to be significant. 
 
-Run a t-test to test the hypothesis that men and women differ on their scores on the IAT. Report and interpret the results using {report}.
+
+#Hypothesis testing
+
+#Hypothesis 1 
+
+A first hypothesis posits a difference between men and women in terms of their mean IAT scores. In order to test whether there are any discrepancies, a t-test is computed. Thereby, the mean values of men and women are being compared and tested for significant difference. 
 
 
 ```{r}
@@ -425,7 +447,7 @@ data_h1_testing <- data_processed_after_exclusions |>
    filter(gender %in% c("f", "m"))
 
 
-#Specify the information within the t test because otherwhise it produces a warning. The warning does not affect the calculation but still it is better to specify   
+#Specify the information within the t test because otherwise it produces a warning.    
 H1_Result <- t.test(data_h1_testing$D ~ data_h1_testing$gender,data = data_h1_testing)
 
 
@@ -442,42 +464,79 @@ report_text(H1_Result)
 
 ```
 
-#Regression Analysis: 
+*Interpretation*: The effect is very small, positive but not statistically significant. Significance is indicated by the p-value, which lies at 0.42, well above the specified value of 0.05 maximum. In addition, the confidence interval indicates a non-significant correlation as well, since it contains 0. Based on our data, it can therefore not be concluded that men and women differ significantly in their IAT mean scores.
 
-Run a series of regressions to test the hypotheses that each BFI subscale predicts IAT scores. Run separate regressions for each subscale rather than a multiple regression. Report and interpret the results using {report}.
+
+#Hypothesis 2: 
+
+A second hypothesis states that each BFI subscale predicts IAT scores. For testing this assumption, a regression analysis is calculated for each BFI subscale separately. The regression calculates the relationship and possible interactions between two variables. In this case, the response variable is the IAT score and the predictor that is supposed to predict the IAT score is the respective subscale of the BFI. Given that the calculated correlations between the D score and the BFI subscales were not significant, it can be assumed that the regressions are likewise unlikely to be significant, as both constructs are closely related. 
+
+##Extroversion
 
 ```{r}
 
-#Extroversion 
 Regression_Extroversion <- lm(D ~ mean_extroversion, data= data_processed_after_exclusions)
 
-#Conscientiousness
-Regression_Conscient <- lm(D ~ mean_conscient, data = data_processed_after_exclusions)
+#Report the results
 
-#Neuroticism
-Regression_Neuroticism <- lm(D ~ mean_neuroticism, data = data_processed_after_exclusions)
-
-#Agreeableness
-Regression_Agreeable <- lm(D ~ mean_agreeable, data= data_processed_after_exclusions)
-
-#Openness 
-Regression_Openness <- lm(D ~ mean_openness, data = data_processed_after_exclusions)
-
-#Report the regressions 
 report(Regression_Extroversion)
 
+```
+*Interpretation*: The regression was not significant. Therefore, the Extroversion subscale is unable to predict IAT scores on the basis of the data provided. 
+
+##Conscientiousness 
+
+```{r}
+
+Regression_Conscient <- lm(D ~ mean_conscient, data = data_processed_after_exclusions)
+
+#Report the results
+
 report(Regression_Conscient)
-  
+
+```
+*Interpretation*: The regression was not significant. Therefore, the Conscientiousness subscale is unable to predict IAT scores on the basis of the data provided. 
+
+##Neuroticism
+
+```{r}
+
+Regression_Neuroticism <- lm(D ~ mean_neuroticism, data = data_processed_after_exclusions)
+
+#Report the results
+
 report(Regression_Neuroticism)
 
+```
+*Interpreation*: The regression was not significant. Therefore, the Neuroticism subscale is unable to predict IAT scores on the basis of the data provided. 
+
+##Agreeableness
+
+```{r}
+
+Regression_Agreeable <- lm(D ~ mean_agreeable, data= data_processed_after_exclusions)
+
+#Report the results
+
 report(Regression_Agreeable)
+
+```
+*Interpretation*: The regression was not significant. Therefore, the Agreeableness subscale is unable to predict IAT scores on the basis of the data provided. 
+
+##Openness
+
+```{r}
+
+Regression_Openness <- lm(D ~ mean_openness, data = data_processed_after_exclusions)
+
+#Report the results
 
 report(Regression_Openness)
 
 
 ```
+*Interpretation*: The regression was not significant. Therefore, the Openness subscale is unable to predict IAT scores on the basis of the data provided. 
 
-*Interpretation*: 
 
 
 #Plots
@@ -486,6 +545,8 @@ Create series of scatter plots of how BFI subscale scores predict IAT scores. Ad
 
 
 ```{r}
+
+
 
 
 ```

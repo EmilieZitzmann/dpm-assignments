@@ -132,10 +132,9 @@ data_reversed_items <- data_raw_bfi |>
 
 ###Sanity Check 
 
-1. To check whether the reversals are likely to be correct a correlation matrix for each variable is           created. If the correlation is negative or rather low it could indicate that the reversing was not          carried out properly. As the Big Five tend to be normally distributed the Pearson correlation is used to
-   calculate the matrix. The 'use' within the correlation function is set to complete.obs, which means that    variables that contain missing data are not included. This is important considering that the participants    only filled out two or three of the subscales which is producing some NA for each row, hindering to         calculate the correlation correctly. 
+To check whether the reversals are likely to be correct a correlation matrix for each variable is           created. If the correlation is negative or rather low it could indicate that the reversing was not          carried out properly. As the Big Five tend to be normally distributed the Pearson correlation is used to calculate the matrix. The 'use' within the correlation function is set to complete.obs, which means that    variables that contain missing data are not included. This is important considering that the participants  only filled out two or three of the subscales which is producing some NA for each row, hindering to         calculate the correlation correctly. 
 
-   In order to make sure that the newly created correlation matrix with the reverted items produces less/no    negative results, a matrix is calculated for the original dataset and compared with the matrix of the       reversed one. 
+In order to make sure that the newly created correlation matrix with the reverted items produces less/no    negative results, a matrix is calculated for the original dataset and compared with the matrix of the       reversed one. 
 
 ```{r}
 
@@ -191,10 +190,10 @@ Matrix_openness_original <- data_raw_bfi |>
 
 ```
 
-  *Interpretation*: The reversal procedure appears to be effective, as the only remaining negative             correlation can be observed between items bfi_o7 and bfi_o10. In comparison to the original matrix, there    is a substantial reduction in the overall negative correlations. 
+*Interpretation*: The reversal procedure appears to be effective, as the only remaining negative            correlation can be observed between items bfi_o7 and bfi_o10. In comparison to the original matrix, there   is a substantial reduction in the overall negative correlations. 
 
 
-2. A second sanity check is that the logical minimum (1) and maximum (6) are not violated. In order to check    that an exclusion variable is created that sets participants with impossible data to 'exclude'. Again       specific information is selected with c_across()
+A second sanity check is that the logical minimum (1) and maximum (6) are not violated. In order to check   that an exclusion variable is created that sets participants with impossible data to 'exclude'. Again       specific information is selected with c_across()
 
 ```{r}
 
@@ -216,7 +215,7 @@ data_logical_number <- data_reversed_items |>
 
 ```
 
-  *Interpretation*: To check whether individuals violate the logical minimum or maximum, they can be           identified through filtering. This concerns 3 individuals. The dataset illustrates that they all included    7 in one response, which justifies the exclusion. 
+*Interpretation*: To check whether individuals violate the logical minimum or maximum, they can be          identified through filtering. This concerns 3 individuals. The dataset illustrates that they all included   7 in one response, which justifies the exclusion. 
 
 ```{r}
 
@@ -229,7 +228,7 @@ data_logical_number |>
 ```
 
 
-3. To perform a third quality check of the BFI data, we ensure that all participants have completed data for    the surveys they filled out. Initially, a new variable is created for each survey and assigned 'include'    if all values in the specified row of the survey are present and not missing. We then filter out the        'excluded' observations based on that criterion. After summarizing this information in a new data frame,    the dataset is further refined by excluding people who completed less than two questionnaires. This step    aims to minimize unnecessary exclusions, taking into account that individuals with missing information      may still have completed at least 2 questionnaires. In the final step, this cleaned data frame is merged    with the reversed data frame and all newly added rows are removed, resulting in a refined and cleaned       dataset.
+To perform a third quality check of the BFI data, we ensure that all participants have completed data for   the surveys they filled out. Initially, a new variable is created for each survey and assigned 'include'    if all values in the specified row of the survey are present and not missing. We then filter out the        'excluded' observations based on that criterion. After summarizing this information in a new data frame,    the dataset is further refined by excluding people who completed less than two questionnaires. This step    aims to minimize unnecessary exclusions, taking into account that individuals with missing information      may still have completed at least 2 questionnaires. In the final step, this cleaned data frame is merged    with the reversed data frame and all newly added rows are removed, resulting in a refined and cleaned       dataset.
 
 ```{r}
 

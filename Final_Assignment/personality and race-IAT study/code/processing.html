@@ -1926,18 +1926,16 @@ an exclusion criterion in this context.</p>
 <p>Age and Gender should be extracted from the dataframe. As these are
 both within ‘variable’ two new variables named ‘Age’ and ‘Gender’ have
 to be created by using pivot_wider().</p>
-<p>Prior to this, it is necessary to inspect the raw dataset for
-duplicated or NA data within the ‘unique_Id’. The resulting ‘check_Id’
-dataframe reveals the presence of both duplicated and NA data, which is
-then extracted into a new dataframe.</p>
-<p>In a subsequent step, missing and duplicated values are isolated. Any
-values not meeting the specified criteria are assigned as
-‘other/missing/error’ for potential exclusion at a later stage, if
-required.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#Dataframe to check whether we have NA or duplicated unique_Id</span></span>
+<p>Prior to this, it is necessary to inspect the raw dataset for NA data
+within the ‘unique_Id’. The resulting ‘check_Id’ dataframe reveals the
+presence of NA data, which is then removed from the new dataframe. In a
+subsequent step, missing values are isolated. Any values not meeting the
+specified criteria are assigned as ‘other/missing/error’ for potential
+exclusion at a later stage, if required.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#Dataframe to check whether we have NA in unique_Id</span></span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>check_Id <span class="ot">&lt;-</span> data_raw_demographics <span class="sc">|&gt;</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">select</span>(unique_id, variable, response) <span class="sc">|&gt;</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">exclude_Id=</span> <span class="fu">ifelse</span> (<span class="fu">is.na</span>(unique_id) <span class="sc">|</span> <span class="fu">duplicated</span>(unique_id) <span class="sc">|</span><span class="fu">duplicated</span>(unique_id, <span class="at">fromLast =</span> T), </span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">exclude_Id=</span> <span class="fu">ifelse</span> (<span class="fu">is.na</span>(unique_id), </span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                             <span class="st">&quot;missing&quot;</span>, </span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>                             <span class="st">&quot;inlcude&quot;</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="fu">group_by</span>(unique_id) </span>
@@ -1946,7 +1944,7 @@ required.</p>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>data_age_gender <span class="ot">&lt;-</span> data_raw_demographics <span class="sc">|&gt;</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="fu">select</span>(unique_id, variable, response) <span class="sc">|&gt;</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">duplicated</span>(unique_id) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(unique_id)) <span class="sc">|&gt;</span> <span class="co">#filter out duplicated and NA</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(unique_id)) <span class="sc">|&gt;</span> <span class="co">#filter out the NA </span></span>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> variable,</span>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>              <span class="at">values_from =</span> response) <span class="sc">|&gt;</span> </span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">gender =</span> sex) <span class="sc">|&gt;</span></span>
@@ -2542,29 +2540,30 @@ are:</p>
 <div id="define-master-exclusions" class="section level1">
 <h1>Define master exclusions</h1>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># create a master exclude_participant variable</span></span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> data_processed_before_exclusions <span class="sc">|&gt;</span></span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">exclude_participant =</span> <span class="fu">case_when</span>(<span class="fu">is.na</span>(bfi_logical_number_violation) <span class="sc">|</span></span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>                                         <span class="fu">is.na</span>(bfi_questionnaire_inclusion) <span class="sc">|</span></span>
-<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a>                                         <span class="fu">is.na</span>(bfi_mean_violation) <span class="sc">|</span></span>
-<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>                                         <span class="fu">is.na</span>(d_score_range) <span class="sc">|</span></span>
-<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a>                                         <span class="fu">is.na</span>(iat_completed_trials) <span class="sc">|</span></span>
-<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>                                         <span class="fu">is.na</span>(exclude_accuracy)</span>
-<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a>                                         <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a>                                         bfi_logical_number_violation <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a>                                         bfi_questionnaire_inclusion <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a>                                         bfi_mean_violation <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a>                                         d_score_range <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a>                                         iat_completed_trials <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a>                                         exclude_accuracy <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
-<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a>                                         <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;include&quot;</span>)) </span>
-<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a></span>
-<span id="cb22-18"><a href="#cb22-18" tabindex="-1"></a><span class="co">#Check: how many participants got filtered out? </span></span>
-<span id="cb22-19"><a href="#cb22-19" tabindex="-1"></a>filtered_count <span class="ot">&lt;-</span> data_processed <span class="sc">%&gt;%</span></span>
-<span id="cb22-20"><a href="#cb22-20" tabindex="-1"></a>  <span class="fu">group_by</span>(exclude_participant) <span class="sc">%&gt;%</span></span>
-<span id="cb22-21"><a href="#cb22-21" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>())</span>
-<span id="cb22-22"><a href="#cb22-22" tabindex="-1"></a></span>
-<span id="cb22-23"><a href="#cb22-23" tabindex="-1"></a><span class="co"># Display the result</span></span>
-<span id="cb22-24"><a href="#cb22-24" tabindex="-1"></a><span class="fu">print</span>(filtered_count)</span></code></pre></div>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> data_processed_before_exclusions <span class="sc">|&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">exclude_participant =</span> <span class="fu">case_when</span>(<span class="fu">is.na</span>(bfi_logical_number_violation) <span class="sc">|</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a>                                         <span class="fu">is.na</span>(bfi_questionnaire_inclusion) <span class="sc">|</span></span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>                                         <span class="fu">is.na</span>(bfi_mean_violation) <span class="sc">|</span></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a>                                         <span class="fu">is.na</span>(d_score_range) <span class="sc">|</span></span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>                                         <span class="fu">is.na</span>(iat_completed_trials) <span class="sc">|</span></span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a>                                         <span class="fu">is.na</span>(exclude_accuracy)</span>
+<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a>                                         <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a>                                         bfi_logical_number_violation <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a>                                         bfi_questionnaire_inclusion <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a>                                         bfi_mean_violation <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a>                                         d_score_range <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a>                                         iat_completed_trials <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-16"><a href="#cb22-16" tabindex="-1"></a>                                         exclude_accuracy <span class="sc">==</span> <span class="st">&quot;exclude&quot;</span> <span class="sc">~</span> <span class="st">&quot;exclude&quot;</span>,</span>
+<span id="cb22-17"><a href="#cb22-17" tabindex="-1"></a>                                         <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;include&quot;</span>)) </span>
+<span id="cb22-18"><a href="#cb22-18" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" tabindex="-1"></a><span class="co">#Check: how many participants got filtered out? </span></span>
+<span id="cb22-20"><a href="#cb22-20" tabindex="-1"></a>filtered_count <span class="ot">&lt;-</span> data_processed <span class="sc">|&gt;</span></span>
+<span id="cb22-21"><a href="#cb22-21" tabindex="-1"></a>  <span class="fu">group_by</span>(exclude_participant) <span class="sc">|&gt;</span></span>
+<span id="cb22-22"><a href="#cb22-22" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>())</span>
+<span id="cb22-23"><a href="#cb22-23" tabindex="-1"></a></span>
+<span id="cb22-24"><a href="#cb22-24" tabindex="-1"></a><span class="co"># Display the result</span></span>
+<span id="cb22-25"><a href="#cb22-25" tabindex="-1"></a><span class="fu">print</span>(filtered_count)</span></code></pre></div>
 <pre><code>## # A tibble: 2 × 2
 ##   exclude_participant count
 ##   &lt;chr&gt;               &lt;int&gt;

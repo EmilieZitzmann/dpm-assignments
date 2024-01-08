@@ -34,6 +34,7 @@ library(janitor)
 library(scales)
 library(psych) #For Cronbachs Alpha 
 library(report) #For report in Hypothesis Testing
+library(patchwork) #For combining plots 
 
 ```
 
@@ -171,7 +172,7 @@ Cronbach's alpha is calculated for each BFI subscale. This parameter is an impor
 ```{r}
 
 cronbach_alpha_extroversion <- data_processed_after_exclusions |>
-  dplyr::select(contains("bfi_e")) |>
+  select(contains("bfi_e")) |>
   alpha()
 
 print(cronbach_alpha_extroversion)
@@ -188,7 +189,7 @@ print(cronbach_alpha_extroversion)
 ```{r}
 
 cronbach_alpha_conscient <- data_processed_after_exclusions |>
-  dplyr::select(contains("bfi_c"))|>
+ select(contains("bfi_c"))|>
   alpha()
 
 print(cronbach_alpha_conscient)
@@ -202,7 +203,7 @@ print(cronbach_alpha_conscient)
 ```{r}
 
 cronbach_alpha_neuroticism <- data_processed_after_exclusions |>
-  dplyr::select(contains("bfi_n")) |>
+  select(contains("bfi_n")) |>
   alpha()
 
 print(cronbach_alpha_neuroticism)
@@ -216,7 +217,7 @@ print(cronbach_alpha_neuroticism)
 ```{r}
 
 cronbach_alpha_agreeable <- data_processed_after_exclusions |>
-  dplyr::select(contains("bfi_a")) |>
+  select(contains("bfi_a")) |>
   alpha()
 
 print(cronbach_alpha_agreeable)
@@ -231,7 +232,7 @@ print(cronbach_alpha_agreeable)
 ```{r}
 
 cronbach_alpha_openness <- data_processed_after_exclusions |>
-  dplyr::select(contains("bfi_o")) |>
+  select(contains("bfi_o")) |>
   alpha()
 
 print(cronbach_alpha_openness)
@@ -539,593 +540,250 @@ report(Regression_Openness)
 
 
 
-#Plots
+#Regression Plots 
 
 Create series of scatter plots of how BFI subscale scores predict IAT scores. Add regression lines. These plots therefore illustrate the same results as the regressions above. Make the plots presentable and publication quality- you may decide the details of this with one exception: Extreme scores on the IAT (defined as participants whose scores in the top and bottom 10% of IAT scores) should use a triangular shape rather than a dot. A single combined plot should be created, containing 5 component plots, with the personality facet being examined in each clearly labelled. This plot should be printed in the html file but also saved to disk as both png/pdf.
 
 
+##Extroversion
 ```{r}
+#Create a new variable with extreme 10% top and bottom IAT Scores in order to plot them later  
+data_scatter_plot_extreme <- data_processed_after_exclusions |>
+  mutate(extreme_score_IAT = ifelse(D <= quantile(D, 0.1) | D >= quantile(D, 0.9), "Extreme", "Normal"))
 
-
-
-
-```
-
-
-
-# Descriptives
-
-Descriptive statistics and plots of the measures (excluding the demographics variables)
-
-## Self-reported evaluations
-
-### Descriptive stats
-
-```{r}
-
-ggplot(data_processed_after_exclusions, aes(x = mean_evaluation)) +
-  geom_histogram(binwidth = 1,
-                 boundary = 0,
-                 fill = viridis_pal(begin = 0.45, option = "mako")(1), 
-                 color = viridis_pal(begin = 0.30, option = "mako")(1)) + 
-  xlab("Mean self-reported evaluation") +
-  ylab("Frequency") +
-  theme_linedraw() +
-  scale_x_continuous(breaks = pretty_breaks(n = 7)) +
-  coord_cartesian(xlim = c(1, 7)) +
-  theme(panel.grid.minor = element_blank())
-
-```
-
-
-
-
-
-## AMP evaluations
-
-### Descriptive stats
-
-\TODO add table of means, SDs, Ns
-
-```{r}
-
-
-
-dat_mean_ratings <- data_processed_after_exclusions |>
-  summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
-            SD = sd(mean_evaluation, na.rm = TRUE),
-            n = n()) |>
-  mutate(group = "Full sample")
-
-# by gender
-dat_mean_ratings_by_gender <- data_processed_after_exclusions |>
-  group_by(group = gender) |>
-  summarise(Mean = mean(mean_evaluation, na.rm = TRUE),
-            SD = sd(mean_evaluation, na.rm = TRUE),
-            n = n())
-
-# combine
-bind_rows(dat_mean_ratings,
-          dat_mean_ratings_by_gender) |>
-  select(Subset = group, Mean, SD, n) |> 
-  mutate(Subset = stringr::str_to_sentence(Subset)) |> 
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  add_header_above(header = c(" " = 1, "AMP Evaluations" = 3)) |>
-  kable_classic(full_width = FALSE)
-
-```
-
-### Descriptive plots
-
-```{r}
-
-ggplot(data_processed_after_exclusions, aes(x = AMP_score)) +
-  geom_histogram(binwidth = 0.05,
-                 boundary = 0,
-                 fill = viridis_pal(begin = 0.45, option = "mako")(1), 
-                 color = viridis_pal(begin = 0.30, option = "mako")(1)) + 
-  xlab("AMP score") +
-  ylab("Frequency") +
-  theme_linedraw() +
-  scale_x_continuous(breaks = pretty_breaks(n = 10))
-
-
-
-```
-
-# Analyses & hypothesis tests
-
-## Self-reported evaluations are correlated with evaluations on the AMP
-
-### Plot
-
-```{r}
-
-ggplot(data_processed_after_exclusions, 
-       aes(x = AMP_score,
-           y = mean_evaluation)) +
-  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1),
-              alpha = 0.5) +
+#Plot
+plot_extroversion <- ggplot(data_scatter_plot_extreme, 
+                            aes(y = D, x = mean_extroversion, 
+                                color = extreme_score_IAT, 
+                                shape = extreme_score_IAT)) +
+  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+              alpha = 0.7,
+              width = 0.2, size = 2.5) +  
   geom_smooth(method = "lm",
-              color = viridis_pal(begin = 0.45, option = "mako")(1)) +
-  xlab("AMP score") +
-  ylab("Mean self-reported evaluation") +
-  theme_linedraw() 
+              aes(group = 1),  
+              color = "#34495e",
+              size = 0.8) +
+  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
+             size = 2.2) +  # Adjust the size for the triangular points
+  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  ylab("D Score") +
+  xlab("Extroversion") +
+  ggtitle("Regression Analysis: Extroversion Predicting IAT Scores") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1, 6, 1),
+                     limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq (-2, 2, 1),
+                     limits =c(-2, 2))+
+  coord_cartesian(xlim = c(1, 6)) +
+  theme(panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        legend.box.background = element_rect(color = "black", size = 0.5),
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20)))
+#Show the plot 
+plot_extroversion
 
-ggplot(data_processed_after_exclusions, 
-       aes(y = AMP_score,
-           x = mean_evaluation)) +
-  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1),
-              alpha = 0.5) +
+```
+
+##Conscientiousness 
+```{r}
+
+plot_conscient <- ggplot(data_scatter_plot_extreme, 
+                         aes(y = D, x = mean_conscient, 
+                             color = extreme_score_IAT, 
+                             shape = extreme_score_IAT)) +
+  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+              alpha = 0.7,
+              width = 0.2, size = 2.5) +  
   geom_smooth(method = "lm",
-              color = viridis_pal(begin = 0.45, option = "mako")(1)) +
-  ylab("AMP score") +
-  xlab("Mean self-reported evaluation") +
-  theme_linedraw() 
-
-ggplot(data_processed_after_exclusions, 
-       aes(x = AMP_score,
-           y = mean_evaluation)) +
-  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1),
-              alpha = 0.5) +
-  xlab("AMP score") +
-  ylab("Mean self-reported evaluation") +
-  theme_linedraw() 
-
-```
-
-More complex plots:
-
-#### Axial hisograms
-
-Scatter plots with axial histograms using ggExtra: https://cran.r-project.org/web/packages/ggExtra/vignettes/ggExtra.html
-
-\TODO add axial histograms to a scatter plot. In a single plot, present different regression lines split by gender, and separate axial histograms for each gender.
-
-```{r}
-library("ggExtra")
-library("ggplot2")
-
-
-#creating a plot 
-plot1 <- ggplot(data_processed_after_exclusions, 
-       aes(x = AMP_score,
-           y = mean_evaluation)) +
-  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1),
-              alpha = 0.5) +
-  xlab("AMP score") +
-  ylab("Mean self-reported evaluation") +
-  theme_linedraw() 
-
-ggMarginal(plot1, type = "histogram")
-
-
-#Split them by gender and add regression line 
-
-Axial_histogram_gender <- ggplot(data_processed_after_exclusions, 
-                                  aes(x = AMP_score,
-                                      y = mean_evaluation, 
-                                      colour = gender)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE, color = "pink") +  # Add regression line
-  scale_colour_discrete(name = "gender",
-                        labels = c("female", "male", "non-binary")) +
-  theme(legend.position = c(.15, .7))
-
-ggMarginal(Axial_histogram_gender, type = "histogram", groupColour = TRUE, groupFill = TRUE)
-
-
-#The regression line kinda shows a negative trend --> important to observe a first trend 
-
-```
-
-#### Labelled points
-
-Label points using ggrepel: https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html
-
-\TODO Label the points in a scatter plot using their participant codes. Label only the participants with more extreme scores.
-
-To change colors use:
-
-```{r eval=FALSE, include=FALSE}
-##colors 
-colors <- viridis_pal(begin = 0.0, end = 1.0, option = "mako")(10)
-colors
-show_col(colors)
-```
-
-
-```{r}
-library(ggrepel)
-```
-
-
-```{r}
-
-#Plot 
-Point_labels <- ggplot(data_processed_after_exclusions, 
-       aes(x = AMP_score,
-           y = mean_evaluation, 
-           label = subject)) +
-  geom_point (color = "red") +
-  scale_colour_discrete(name = "gender",
-                        labels = c("female", "male", "non-binary"))
-
-set.seed(42)
-
-p1 <- Point_labels + geom_text() + labs(title = "geom_text()")
-
-p2 <- Point_labels + geom_text_repel() + labs(title = "geom_text_repel()")
-
-gridExtra::grid.arrange(p1, p2, ncol = 2)
-
-#R itself gives us a warning, that there are unlabeled data points and too many overlaps, so this plot is not really useful 
-#a way this plot is often used is to show the outliers or identify them, this is easily done by just putting the outlier variable or an order reporting the outliers directly in to the ggplot 
-
-
-```
-
-#### Magnify areas
-
-Magnify areas of your plot with ggmagnify: https://hughjonesd.github.io/ggmagnify/
-
-\TODO Magnify an area of one of your scatter plots, eg where there are a lot of data points in a small area.
-
-```{r}
-# Load necessary libraries
-library(ggplot2)
-library(ggmagnify)
-
-# Your original scatter plot
-ggp <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, y = mean_evaluation)) +
-  geom_jitter(color = viridis_pal(begin = 0.45, option = "mako")(1), alpha = 0.5) +
-  xlab("AMP score") +
-  ylab("Mean self-reported evaluation") +
-  theme_linedraw()
-
-# Define the area to be magnified
-# Adjust these values to the area you want to zoom in on
-from <- c(xmin = 0.3, xmax = 0.8, ymin = 0.8, ymax = 1.3)
-
-# Define where to place the magnified inset on the plot
-# Adjust these values to place the inset where you like
-to <- c(xmin = 0, xmax = 0.25, ymin = 4, ymax = 5)
-
-# Add the magnified area to the plot
-ggp + geom_magnify(from = from, to = to)
-```
-### Test
-
-\TODO run an appropriate test. Below the output, interpret the results: write a few sentences that report and interpret the results following APA reporting style.
-Statistical inference test ---> Test stats and p value 
-Hypothesis: Self-reported evaluations are correlated with evaluations on the AMP
-
-```{r}
-
-# In order tot check whether self report evaluations are correlated with the amp evaluations we remember the regression line above where we saw a slight negative trend We should test this statistically 
-result <- cor.test(data_processed_after_exclusions$mean_evaluation, data_processed_after_exclusions$AMP_score, method = "pearson")
-
-# Print the test statistics and p-value
-print(result)
-#if we want the results specifically
- result$p.value
- result$estimate
-
-#we see a negative correlation however it is not significant (p = .2435), also seen in confidence interval that includes 0 suggesting that there is no correlation in the data 
-
-# we can alos check for a spearman correlation test
- result2 <- cor.test(data_processed_after_exclusions$mean_evaluation, data_processed_after_exclusions$AMP_score, method = "spearman")
-
- result2$p.value
- result2$estimate
-
- 
-#for the spearman it is almost identical (not surprisingly)
-
-```
-
-## Self-reported evalautions differ between men and women
-
-### Plot
-
-\TODO split histogram, split violin plot, raincloud plot, etc.
-
-```{r}
-#####split histogram
-
-#I included a legend in all three plots, this is not particularly useful since there are automatically created axial labels and it is looking rather overplottet, it is just for exercise reasons to see how a Legend can be included and modified (see in Chunk below)
-
-library(ggplot2)
-library(hrbrthemes)  #really cool package for better themes 
-
-# I choose the theme ipsum (very clean there is a lot of different ones)
-theme_set(theme_ipsum())
-
-# Plotting
-splithistogram <- ggplot(data_processed_after_exclusions, aes(x = mean_evaluation, fill = gender)) +
-  geom_histogram(position = "dodge", binwidth = 0.5, color = "white", alpha = 0.8, size = 0.2) +
-  geom_vline(xintercept = seq(0, 6, by = 6), color = "black", size = 1) + #put in lines in order to  distinguish the plots if you don't they are all kinda squished together 
-  facet_wrap(~ gender, scales = "free_x") +
-  xlab("Mean Evaluation") +
-  ylab("Frequency of Evaluation") +
-  labs(title = "Distribution of Mean Evaluation by Gender") +
-  scale_fill_manual(values = c("female" = "#FF9999", "male" = "#66B2FF", "nonbinary" = "#99FF99"), guide = FALSE) + #sometimes this does not work (--> if it does not set to NONE)
+              aes(group = 1),  
+              color = "#34495e",
+              size = 0.8) +
+  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
+             size = 2.2) +  # Adjust the size for the triangular points
+  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  ylab("D Score") +
+  xlab("Conscientiousness") +
+  ggtitle("Regression Analysis: Conscientiousness Predicting IAT Scores") +
   theme_minimal() +
-  theme(#This is for te legend bars (really practical for some things)
-    legend.position = "top",
-    legend.background = element_rect(fill = "white"),
-    strip.background = element_rect(fill = "lightgray", color = "white"),
-    strip.text = element_text(color = "black", size = 11),
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 10),
-    axis.title = element_text(size = 12, face = "bold"),
-    plot.title = element_text(size = 14, face = "bold"),
-    panel.spacing = unit(0.0, "lines")  #Here we can reduce the space between the bars 
-  ) +
-  theme(
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 10),
-    axis.title = element_text(size = 12, face = "bold"),
-    plot.title = element_text(size = 14, face = "bold")
-  ) +
-  scale_x_continuous(expand = c(0.05, 0.05)) + # Adjust the space on the x axis (both ends)
-  coord_cartesian(xlim = c(0, 6))  # Since we have a scale from 1-6 we can fix the scale for all to show from 1-6 in order to see the distribution
-# Print the plot
-print(splithistogram)
+  scale_x_continuous(breaks = seq(1, 6, 1),
+                     limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq (-2, 2, 1),
+                     limits =c(-2, 2))+
+  coord_cartesian(xlim = c(1, 6)) +
+  theme(panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        legend.box.background = element_rect(color = "black", size = 0.5),
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
 
-  
-#With regard to the hypothesis we see a differing distribution which could lead to a significant hypothesis (men and women differing in their self reports)
-
-
-##### Violin Plot 
-#Theme 
-theme_set(theme_ipsum_ps()) # choosing a different theme this time in order to experiment a bit
-
-# Violin Plot
-splitviolin <- ggplot(data_processed_after_exclusions, aes(x = gender, y = mean_evaluation, fill = gender)) +
-  geom_violin(scale = "width", trim = FALSE, alpha = 0.7, color = "black") +
-  geom_boxplot(width = 0.1, fill = "white", color = "black", alpha = 0.7) +
-  xlab("Gender") +
-  ylab("Mean Evaluation") +
-  theme_minimal() +
-  theme(
-    legend.position = "top", #we put top instead of a vector since it is not pretty with the vector (see above how to do with a vector)
-    legend.background = element_rect(fill = "white"),
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 12),
-    axis.title = element_text(size = 14, face = "bold"),
-    plot.title = element_text(size = 16, face = "bold"),
-    panel.spacing = unit(0.0, "lines")) +
-  scale_fill_manual(values = c("female" = "#FF9999", "male" = "#66B2FF", "nonbinary" = "#99FF99")) +
-  coord_cartesian(ylim = c(0, 6))
-
-# Print 
-print(splitviolin)
-
-#The violin plot offers a bit more information on the distribution of the self evaluations. Since there are so little people having a nonbinary gender the wide distribution is not surprising. Whereas for men and women there is more to interpret --> The median is different and women have a less higher distribution also suggesting that the two genders might differ. 
-
-
-#####raincloud plot
-library(ggplot2)
-library(ggdist)#used for flat violin
-library(hrbrthemes)
-
-
-# Set the theme
-theme_set(theme_ipsum())
-
-
-raincloudplot <- ggplot(data_processed_after_exclusions, aes(x = gender, y = mean_evaluation, fill = gender)) +
-  geom_violin(scale = "width", trim = FALSE, alpha = 0.5, color = "black") +
-  geom_point(aes(color = gender), position = position_jitter(width = 0.1), size = 2, alpha = 0.5) +
-  geom_boxplot(width = 0.1, fill = "white", color = "black", alpha = 0.7) +
-  labs(x = "Gender", y = "Mean Evaluation") +
-  theme_minimal() +
-  theme(
-    legend.position = "top",  # Adjust legend position to the top
-    legend.background = element_rect(fill = "white"),
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 10),
-    axis.title = element_text(size = 12, face = "bold"),
-    plot.title = element_text(size = 14, face = "bold"))
-
-
-
-# Print the plot
-print(raincloudplot)
-
-
-#The raincloud plot suggests the same as above with women having some outliers where men still have distribution in violin plot. The overall plotting suggests that the hypothesis is supported. 
-
-
+#Show the plot
+plot_conscient
 
 ```
 
-### Test
 
-\TODO run an appropriate test. Below the output, interpret the results: write a few sentences that report and interpret the results following APA reporting style.
-
-
-Self-reported evalautions differ between men and women 
+##Neuroticism
 
 ```{r}
-#T-Test to check for possible differences 
+plot_neuroticism <- ggplot(data_scatter_plot_extreme, 
+                         aes(y = D, x = mean_neuroticism, 
+                             color = extreme_score_IAT, 
+                             shape = extreme_score_IAT)) +
+  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+              alpha = 0.7,
+              width = 0.2, size = 2.5) +  
+  geom_smooth(method = "lm",
+              aes(group = 1),  
+              color = "#34495e",
+              size = 0.8) +
+  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
+             size = 2.2) +  # Adjust the size for the triangular points
+  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  ylab("D Score") +
+  xlab("Neuroticism") +
+  ggtitle("Regression Analysis: Neuroticism Predicting IAT Scores") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1, 6, 1),
+                     limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq (-2, 2, 1),
+                     limits =c(-2, 2))+
+  coord_cartesian(xlim = c(1, 6)) +
+  theme(panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        legend.box.background = element_rect(color = "black", size = 0.5),
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
 
-#Create one dataset for male and female 
-data_male <- subset(data_processed_after_exclusions, gender == "male")
-data_female <- subset(data_processed_after_exclusions, gender == "female")
-
-
-#doing a T-Test with the mean_evaluation self reports 
-t_test_result <- t.test(mean_evaluation ~ gender, data = rbind(data_male, data_female))
-
-#Printing the results in order to see whether it is significant or not: 
-print(t_test_result)
-
-
-library(report)
-report_table(t_test_result)
-report_effectsize(t_test_result)
-report_text(t_test_result)
-
-
-
-#If a T-Test is not possible (this is the case when there is more than two independent groups) we can conduct a Kruskal_Wallis-Test. If we would like to include all genders (not only men and women), a Kruskal test is appropriate. 
-
-kruskal_result <- kruskal.test(mean_evaluation ~ gender, data = data_processed_after_exclusions)
-
-# Print the result
-print(kruskal_result)
-
-#Similarly, the Kruskal-Wallis test confirms the previously indicated significance. Likewise the p-value is clearly below 0.5 (p= 0.0037) and thus indicates a significant difference with regard to the self-reported average evaluation in men, women and non-binary individuals. 
+#Show the plot
+plot_neuroticism
 
 ```
 
-## Evaluations on the Affect Misattribution Procedure differ between men and women
-
-### Plot
-
-\TODO split histogram, split violin plot, raincloud plot, etc.
-
-This time, vary the labeling and order of the legend, e.g., capitalise "Men" and "Women", and know how to change the order of the factors.
-
-```{r}
-#####Split Histogram 
-#vary the labeling and order of the legend 
-# We can define custom labels and vary their order so the legend shows different things 
-custom_labels <- c( "Women", "Non-binary", "Men") # here we can vary the names and order within the legend 
-custom_order <- c("female", "nonbinary", "male" ) #with this we can adjust the custom order
-
-#ATTENTION: The order of the custom labels and order has to be the same otherwhise the legend and the order is not matched 
-
-#In order to be able to reorder them we have to change the factor since otherwhise there is absolutely nothing happening 
-data_processed_after_exclusions$gender <- factor(data_processed_after_exclusions$gender, 
-                                                 levels = custom_order)
-
-#we can then easily insert them into our splithistogram like that 
-splithistogram2 <- ggplot(data_processed_after_exclusions, aes(x = AMP_score, fill = gender)) +
-  geom_histogram(position = "dodge", binwidth = 0.15, color = "black", alpha = 0.7) +
-  facet_grid(. ~ gender) +
-  xlab("AMP score") +
-  ylab("Mean self-reported evaluation") +
-  theme_minimal() +
-  theme(legend.position = c(0.51, 0.8), legend.background = element_rect(fill = "white")) +
-  scale_fill_manual(values = c("female" = "red", "male" = "blue", "nonbinary" = "green"),  
-                    labels = custom_labels) +
-  labs(fill = "Gender")  # We could also capitalize the header (title) of the legend
-
-
-# Print the plot
-print(splithistogram2)
-
-#As we can see the legend is changed now with all things being capitalized --> in order to change them again we can adjust the vector 
-
-
-
-#####Split violin plot 
-#change the order of the violin plot (same as above) --> it is the same custom labels and order if we would like different ones we would have to name them differently in order to not get things mixed up 
-custom_labels <- c( "Women", "Non-binary", "Men") 
-custom_order <- c("female", "nonbinary", "male" )
-
-# Reorder the level
-data_processed_after_exclusions$gender <- factor(data_processed_after_exclusions$gender, 
-                                                 levels = custom_order)
-
-# Split violin with the legend being modified 
-splitviolin2 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
-  geom_violin(scale = "width", trim = FALSE, alpha = 0.7, color = "black") +
-  geom_boxplot(width = 0.1, fill = "white", color = "black", alpha = 0.7) +
-  facet_wrap(~gender, scales = "free_x") +
-  xlab("Gender") +
-  ylab("AMP Score") +
-  theme_minimal() +
-  theme(legend.position = c(0.5, 0.2), legend.background = element_rect(fill = "white")) +
-  scale_fill_manual(values = c("female" = "red", "male" = "blue", "nonbinary" = "green"),  
-                    labels = custom_labels,
-                    breaks = custom_order)
-
-# Print the plot
-print(splitviolin2)
-
-
-
-##### Raincloud plot
-library(ggbeeswarm)
-
-#We are again taking our same labels as above ( we do not have to read them in all of the time but it is better to have an intersubjective view of what happened)
-custom_labels <- c( "Women", "Non-binary", "Men") 
-custom_order <- c("female", "nonbinary", "male" )
-
-#reorder the levels (again same thing as previously done)
-data_processed_after_exclusions$gender <- factor(data_processed_after_exclusions$gender, 
-                                                 levels = custom_order)
-
-
-#Create the plot 
-raincloudplot2 <- ggplot(data_processed_after_exclusions, aes(x = gender, y = AMP_score, fill = gender)) +
-  geom_violin(trim = FALSE, scale = "area", adjust = 1.5, alpha = 0.5) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
-  geom_quasirandom(aes(color = gender, fill = gender), size = 2, alpha = 0.5, show.legend = FALSE) +
-  scale_x_discrete(labels = custom_labels) + #Changing the labels of the automatically created axial labels to the one we have customed. 
-  scale_color_manual(values = c("female" = "red", "male" = "blue", "nonbinary" = "green"),  #we adjust the colours because otherwise the points and plots do not match
-                    labels = custom_labels,
-                    breaks = custom_order) +
-  scale_fill_manual(values = c("female" = "red", "male" = "blue", "nonbinary" = "green"),  
-                    labels = custom_labels,
-                    breaks = custom_order) +
-  labs(x = "Gender", y = "AMP Score") +
-  theme_minimal() +
-  theme(legend.position = c(0.51, 0.2), legend.background = element_rect(fill = "white"))
-
-
-# Print the plot
-print(raincloudplot2)
-
-```
-
-### Test
-Hypothesis from above: Evaluations on the Affect Misattribution Procedure differ between men and women
-
-\TODO run an appropriate test. Below the output, print an interpretation of the results generated by the 'easystats' package [report](https://easystats.github.io/report/). I.e., use `report::report()`.
-
+##Agreeableness 
 ```{r}
 
-#t test
+plot_agreeable <- ggplot(data_scatter_plot_extreme, 
+                         aes(y = D, x = mean_agreeable, 
+                             color = extreme_score_IAT, 
+                             shape = extreme_score_IAT)) +
+  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+              alpha = 0.7,
+              width = 0.2, size = 2.5) +  
+  geom_smooth(method = "lm",
+              aes(group = 1),  
+              color = "#34495e",
+              size = 0.8) +
+  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
+             size = 2.2) +  # Adjust the size for the triangular points
+  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  ylab("D Score") +
+  xlab("Agreeableness") +
+  ggtitle("Regression Analysis: Agreeableness Predicting IAT Scores") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1, 6, 1),
+                     limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq (-2, 2, 1),
+                     limits =c(-2, 2))+
+  coord_cartesian(xlim = c(1, 6)) +
+  theme(panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        legend.box.background = element_rect(color = "black", size = 0.5),
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
 
+#Show the plot
+plot_agreeable
+```
 
-data_tests <- rbind(data_male, data_female)
+##Openness
 
+```{r}
+plot_openness <- ggplot(data_scatter_plot_extreme, 
+                         aes(y = D, x = mean_openness, 
+                             color = extreme_score_IAT, 
+                             shape = extreme_score_IAT)) +
+  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+              alpha = 0.7,
+              width = 0.2, size = 2.5) +  
+  geom_smooth(method = "lm",
+              aes(group = 1),  
+              color = "#34495e",
+              size = 0.8) +
+  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
+             size = 2.2) +  # Adjust the size for the triangular points
+  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
+                     guide = guide_legend(title = "IAT Score Type")) +
+  ylab("D Score") +
+  xlab("Openness") +
+  ggtitle("Regression Analysis: Openness Predicting IAT Scores") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1, 6, 1),
+                     limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq (-2, 2, 1),
+                     limits =c(-2, 2))+
+  coord_cartesian(xlim = c(1, 6)) +
+  theme(panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        legend.box.background = element_rect(color = "black", size = 0.5),
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
 
-AMP_t_test_result <- t.test(AMP_score ~ gender, data = data_tests)
-print(AMP_t_test_result)
+#Show the plot
 
-
-report_table(AMP_t_test_result)
-report_effectsize(AMP_t_test_result)
-
-report_text(AMP_t_test_result)
+plot_openness
 
 ```
+
 
 ## Combining plots
 
-Combine plots using the library [patchwork](https://patchwork.data-imaginist.com/).
-
-\TODO Combine at least three of the above plots into one.
 
 ```{r}
 
-#The put together plots don't really make any sense since they do not have the same labels on the axis, yet it is an example of how it should work. In order to remove the automatically created axial labels we could change this directly within the plots themselves 
-# you can combine things with patchwork
-library(patchwork)
+library(cowplot)
+install.packages("cowplot")
+
+
+# Assuming you have individual facet plots: plot_extroversion, plot_conscient, plot_neuroticism, plot_agreeable, plot_openness
+
+# Arrange the facet plots in a grid
+facet_plots <- plot_grid(plot_extroversion, plot_agreeable, plot_conscient, plot_neuroticism, plot_openness, ncol = 2)
+
+# Add a common title to the combined plot
+combined_plot <- facet_plots +
+  ggtitle("Regression Analysis: BFI Subscale Scores Predicting IAT Scores") +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, margin = margin(b = 20)))
+
+combined_
+
+
 
 
 #First we have to remove the legends from the plots 
 
-splithistogram2_plot <- splithistogram2_plot + theme(legend.position = "none") 
-splitviolin2_plot <- splitviolin2 + theme(legend.position = "none") 
-raincloudplot2_plot <- raincloudplot2 + theme(legend.position = "none") 
+combined_plot <- plot_extroversion + plot_conscient + plot_neuroticism + plot_agreeable + plot_openness
+
+combined_plot
 
 #Combining a plot (with +)
 combined_plot <- splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot
@@ -1156,26 +814,6 @@ print(combined_plot)
 
 
 ```
-
-TODO: Calculate Cronbachs Alpha for like, positive, prefer 
-
-```{r}
-
-library(psych)
-
-
-
-alpha(subset(data_processed_after_exclusions, select = c(like, positive, prefer)), check.keys = T)#check keys just does change the inverted items (we do not have them)
-
-#cronbachs Alpha is 0.877 
-
-
-
-
-
-```
-
-
 
 ## Saving plots
 

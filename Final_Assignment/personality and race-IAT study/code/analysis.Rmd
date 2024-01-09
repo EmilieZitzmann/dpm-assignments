@@ -35,6 +35,8 @@ library(scales)
 library(psych) #For Cronbachs Alpha 
 library(report) #For report in Hypothesis Testing
 library(patchwork) #For combining plots 
+library(cowplot) #For combinint plots
+library(ggplot2) #For plots
 
 ```
 
@@ -173,7 +175,7 @@ Cronbach's alpha is calculated for each BFI subscale. This parameter is an impor
 
 cronbach_alpha_extroversion <- data_processed_after_exclusions |>
   select(contains("bfi_e")) |>
-  alpha()
+  psych::alpha()
 
 print(cronbach_alpha_extroversion)
 
@@ -190,7 +192,7 @@ print(cronbach_alpha_extroversion)
 
 cronbach_alpha_conscient <- data_processed_after_exclusions |>
  select(contains("bfi_c"))|>
-  alpha()
+  psych::alpha()
 
 print(cronbach_alpha_conscient)
 
@@ -204,7 +206,7 @@ print(cronbach_alpha_conscient)
 
 cronbach_alpha_neuroticism <- data_processed_after_exclusions |>
   select(contains("bfi_n")) |>
-  alpha()
+  psych::alpha()
 
 print(cronbach_alpha_neuroticism)
 
@@ -218,7 +220,7 @@ print(cronbach_alpha_neuroticism)
 
 cronbach_alpha_agreeable <- data_processed_after_exclusions |>
   select(contains("bfi_a")) |>
-  alpha()
+  psych::alpha()
 
 print(cronbach_alpha_agreeable)
 
@@ -233,7 +235,7 @@ print(cronbach_alpha_agreeable)
 
 cronbach_alpha_openness <- data_processed_after_exclusions |>
   select(contains("bfi_o")) |>
-  alpha()
+  psych::alpha()
 
 print(cronbach_alpha_openness)
 
@@ -270,7 +272,7 @@ ggplot(data_processed_after_exclusions, aes(x = mean_extroversion)) +
         axis.text = element_text(size = 10),  # Axis text
         legend.position = "none") + #remove the legend 
   ggtitle("Mean Score Distribution for Extroversion") +  # Add a title 
-  theme(plot.title = element_text(hjust = 0.4, size = 14, margin = margin(b = 20))) #Depending of the                                                                                           distribution the title                                                                                      looks a bit better                                                                                        with hjust 0.4 or 0.5  
+  theme(plot.title = element_text(hjust = 0.4, size = 14, margin = margin(b = 20))) #Depending of the                                                                                            distribution the title                                                                                      looks a bit better                                                                                          with hjust 0.4 or 0.5  
        
 
 ```
@@ -383,7 +385,7 @@ ggplot(data_processed_after_exclusions, aes(x = mean_openness)) +
 
 ## IAT Distribution Histogram 
 
-Distribution of the implicit association test is illustrated by the Greenwald D score. The score can range between -2 and +2. 
+Distribution of the implicit association test is illustrated by the Greenwald D score. The score can range between -2 and +2 indicating the strength and direction of the IAT effect. 
 
 ```{r}
 
@@ -437,7 +439,7 @@ bfi_iat_corr_matrix <- data_processed_after_exclusions |>
 
 #Hypothesis testing
 
-#Hypothesis 1 
+##Hypothesis 1 
 
 A first hypothesis posits a difference between men and women in terms of their mean IAT scores. In order to test whether there are any discrepancies, a t-test is computed. Thereby, the mean values of men and women are being compared and tested for significant difference. 
 
@@ -468,11 +470,11 @@ report_text(H1_Result)
 *Interpretation*: The effect is very small, positive but not statistically significant. Significance is indicated by the p-value, which lies at 0.42, well above the specified value of 0.05 maximum. In addition, the confidence interval indicates a non-significant correlation as well, since it contains 0. Based on our data, it can therefore not be concluded that men and women differ significantly in their IAT mean scores.
 
 
-#Hypothesis 2: 
+##Hypothesis 2: 
 
 A second hypothesis states that each BFI subscale predicts IAT scores. For testing this assumption, a regression analysis is calculated for each BFI subscale separately. The regression calculates the relationship and possible interactions between two variables. In this case, the response variable is the IAT score and the predictor that is supposed to predict the IAT score is the respective subscale of the BFI. Given that the calculated correlations between the D score and the BFI subscales were not significant, it can be assumed that the regressions are likewise unlikely to be significant, as both constructs are closely related. 
 
-##Extroversion
+###Extroversion
 
 ```{r}
 
@@ -485,7 +487,7 @@ report(Regression_Extroversion)
 ```
 *Interpretation*: The regression was not significant. Therefore, the Extroversion subscale is unable to predict IAT scores on the basis of the data provided. 
 
-##Conscientiousness 
+###Conscientiousness 
 
 ```{r}
 
@@ -498,7 +500,7 @@ report(Regression_Conscient)
 ```
 *Interpretation*: The regression was not significant. Therefore, the Conscientiousness subscale is unable to predict IAT scores on the basis of the data provided. 
 
-##Neuroticism
+###Neuroticism
 
 ```{r}
 
@@ -511,7 +513,7 @@ report(Regression_Neuroticism)
 ```
 *Interpreation*: The regression was not significant. Therefore, the Neuroticism subscale is unable to predict IAT scores on the basis of the data provided. 
 
-##Agreeableness
+###Agreeableness
 
 ```{r}
 
@@ -524,7 +526,7 @@ report(Regression_Agreeable)
 ```
 *Interpretation*: The regression was not significant. Therefore, the Agreeableness subscale is unable to predict IAT scores on the basis of the data provided. 
 
-##Openness
+###Openness
 
 ```{r}
 
@@ -548,286 +550,251 @@ Create series of scatter plots of how BFI subscale scores predict IAT scores. Ad
 ##Extroversion
 ```{r}
 #Create a new variable with extreme 10% top and bottom IAT Scores in order to plot them later  
-data_scatter_plot_extreme <- data_processed_after_exclusions |>
+data_extreme_scores <- data_processed_after_exclusions |>
   mutate(extreme_score_IAT = ifelse(D <= quantile(D, 0.1) | D >= quantile(D, 0.9), "Extreme", "Normal"))
 
 #Plot
-plot_extroversion <- ggplot(data_scatter_plot_extreme, 
-                            aes(y = D, x = mean_extroversion, 
-                                color = extreme_score_IAT, 
-                                shape = extreme_score_IAT)) +
-  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+plot_extroversion <-  ggplot(data_extreme_scores, 
+                             aes(y = D, 
+                             x = mean_extroversion, 
+                             color = extreme_score_IAT)) +
+  geom_jitter(aes(shape = extreme_score_IAT), #add different shapes for IAT extreme Scores 
               alpha = 0.7,
-              width = 0.2, size = 2.5) +  
-  geom_smooth(method = "lm",
-              aes(group = 1),  
-              color = "#34495e",
+              width = 0.2, 
+              size = 2.5) +  
+  geom_smooth(formula = y ~ x, 
+              method = "lm", 
+              color = "#34495e", 
               size = 0.8) +
-  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
-             size = 2.2) +  # Adjust the size for the triangular points
-  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
-                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_color_manual(values = c("Normal" = "#2196F3", 
+                                "Extreme" = "#673AB7"), #values and colors for legend
+                     guide = guide_legend(title = "IAT Score Type")) + #title for legend
   scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
-                     guide = guide_legend(title = "IAT Score Type")) +
+                     guide = guide_legend(title = "IAT Score Type")) + #shape for legend
   ylab("D Score") +
   xlab("Extroversion") +
   ggtitle("Regression Analysis: Extroversion Predicting IAT Scores") +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(1, 6, 1),
-                     limits = c(1, 6)) +
-  scale_y_continuous(breaks = seq (-2, 2, 1),
-                     limits =c(-2, 2))+
-  coord_cartesian(xlim = c(1, 6)) +
-  theme(panel.grid.minor = element_blank(), 
+  scale_x_continuous(breaks = seq(1, 6, 1), limits = c(1, 6)) + #breaks and limits for x-axis
+  scale_y_continuous(breaks = seq(-2, 2, 1), limits = c(-2, 2)) + #breaks and limits for y-axis
+  theme(panel.grid.minor = element_blank(), #plot appearance 
         axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.text = element_text(size = 10),
         legend.box.background = element_rect(color = "black", size = 0.5),
-        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20)))
-#Show the plot 
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin(b = 20, t= 15))) #adjust title                                                                                                position
+
+#Look at plot
 plot_extroversion
 
 ```
+*Interpretation*: As can be seen in the regression calculation above, the effect is not significant, but slightly positive. This can be derived from the diagram, albeit only to a very small extent. The intercept is at -0.43, which also seems to be consistent within the diagram.
+
 
 ##Conscientiousness 
+
 ```{r}
 
-plot_conscient <- ggplot(data_scatter_plot_extreme, 
-                         aes(y = D, x = mean_conscient, 
-                             color = extreme_score_IAT, 
-                             shape = extreme_score_IAT)) +
-  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+plot_conscient <-  ggplot(data_extreme_scores, 
+                          aes(y = D, 
+                             x = mean_conscient, 
+                             color = extreme_score_IAT)) +
+  geom_jitter(aes(shape = extreme_score_IAT),  
               alpha = 0.7,
-              width = 0.2, size = 2.5) +  
-  geom_smooth(method = "lm",
-              aes(group = 1),  
-              color = "#34495e",
+              width = 0.2, 
+              size = 2.5) +  
+  geom_smooth(formula = y ~ x, 
+              method = "lm", 
+              color = "#34495e", 
               size = 0.8) +
-  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
-             size = 2.2) +  # Adjust the size for the triangular points
-  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
-                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_color_manual(values = c("Normal" = "#2196F3", 
+                                "Extreme" = "#673AB7"), 
+                     guide = guide_legend(title = "IAT Score Type")) + 
   scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
                      guide = guide_legend(title = "IAT Score Type")) +
   ylab("D Score") +
   xlab("Conscientiousness") +
   ggtitle("Regression Analysis: Conscientiousness Predicting IAT Scores") +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(1, 6, 1),
-                     limits = c(1, 6)) +
-  scale_y_continuous(breaks = seq (-2, 2, 1),
-                     limits =c(-2, 2))+
-  coord_cartesian(xlim = c(1, 6)) +
+  scale_x_continuous(breaks = seq(1, 6, 1), limits = c(1, 6)) + 
+  scale_y_continuous(breaks = seq(-2, 2, 1), limits = c(-2, 2)) + 
   theme(panel.grid.minor = element_blank(), 
         axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.text = element_text(size = 10),
         legend.box.background = element_rect(color = "black", size = 0.5),
-        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin(b = 20, t= 15))) 
 
-#Show the plot
+#Look at plot
 plot_conscient
 
 ```
+*Interpretation*: Although the effect is again not significant, it appears to be slightly negative for the Conscientiousness subscale. This seems to be clear from the diagram, but it is very difficult to read. The intercept is -0.18, which also appears to be consistent in the diagram.
 
 
 ##Neuroticism
 
 ```{r}
-plot_neuroticism <- ggplot(data_scatter_plot_extreme, 
-                         aes(y = D, x = mean_neuroticism, 
-                             color = extreme_score_IAT, 
-                             shape = extreme_score_IAT)) +
-  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+plot_neuroticism <-  ggplot(data_extreme_scores, 
+                            aes(y = D, 
+                             x = mean_neuroticism, 
+                             color = extreme_score_IAT)) +
+  geom_jitter(aes(shape = extreme_score_IAT), 
               alpha = 0.7,
-              width = 0.2, size = 2.5) +  
-  geom_smooth(method = "lm",
-              aes(group = 1),  
-              color = "#34495e",
+              width = 0.2, 
+              size = 2.5) +  
+  geom_smooth(formula = y ~ x, 
+              method = "lm", 
+              color = "#34495e", 
               size = 0.8) +
-  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
-             size = 2.2) +  # Adjust the size for the triangular points
-  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
-                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_color_manual(values = c("Normal" = "#2196F3", 
+                                "Extreme" = "#673AB7"), 
+                     guide = guide_legend(title = "IAT Score Type")) + 
   scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
-                     guide = guide_legend(title = "IAT Score Type")) +
+                     guide = guide_legend(title = "IAT Score Type")) + 
   ylab("D Score") +
   xlab("Neuroticism") +
   ggtitle("Regression Analysis: Neuroticism Predicting IAT Scores") +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(1, 6, 1),
-                     limits = c(1, 6)) +
-  scale_y_continuous(breaks = seq (-2, 2, 1),
-                     limits =c(-2, 2))+
-  coord_cartesian(xlim = c(1, 6)) +
+  scale_x_continuous(breaks = seq(1, 6, 1), limits = c(1, 6)) + 
+  scale_y_continuous(breaks = seq(-2, 2, 1), limits = c(-2, 2)) + 
   theme(panel.grid.minor = element_blank(), 
         axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.text = element_text(size = 10),
         legend.box.background = element_rect(color = "black", size = 0.5),
-        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin(b = 20, t = 15))) 
 
-#Show the plot
+#Look at plot
 plot_neuroticism
 
 ```
+*Interpretation*: Again, there appears to be a slightly positive trend in the regression line. However, as seen in the calculation, it is not significant and only has a faint indication. The intercept for neuroticism lies at -0.35, and this appears to be consistent with the graph. 
+
 
 ##Agreeableness 
+
 ```{r}
 
-plot_agreeable <- ggplot(data_scatter_plot_extreme, 
-                         aes(y = D, x = mean_agreeable, 
-                             color = extreme_score_IAT, 
-                             shape = extreme_score_IAT)) +
-  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+plot_agreeable <-  ggplot(data_extreme_scores, 
+                          aes(y = D, 
+                             x = mean_agreeable, 
+                             color = extreme_score_IAT)) +
+  geom_jitter(aes(shape = extreme_score_IAT), 
               alpha = 0.7,
-              width = 0.2, size = 2.5) +  
-  geom_smooth(method = "lm",
-              aes(group = 1),  
-              color = "#34495e",
+              width = 0.2, 
+              size = 2.5) +  
+  geom_smooth(formula = y ~ x, 
+              method = "lm", 
+              color = "#34495e", 
               size = 0.8) +
-  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
-             size = 2.2) +  # Adjust the size for the triangular points
-  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
-                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_color_manual(values = c("Normal" = "#2196F3", 
+                                "Extreme" = "#673AB7"), 
+                     guide = guide_legend(title = "IAT Score Type")) + 
   scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
-                     guide = guide_legend(title = "IAT Score Type")) +
+                     guide = guide_legend(title = "IAT Score Type")) + 
   ylab("D Score") +
   xlab("Agreeableness") +
   ggtitle("Regression Analysis: Agreeableness Predicting IAT Scores") +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(1, 6, 1),
-                     limits = c(1, 6)) +
-  scale_y_continuous(breaks = seq (-2, 2, 1),
-                     limits =c(-2, 2))+
-  coord_cartesian(xlim = c(1, 6)) +
-  theme(panel.grid.minor = element_blank(), 
+  scale_x_continuous(breaks = seq(1, 6, 1), limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq(-2, 2, 1), limits = c(-2, 2)) + 
+  theme(panel.grid.minor = element_blank(),
         axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.text = element_text(size = 10),
         legend.box.background = element_rect(color = "black", size = 0.5),
-        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin(b = 20, t = 15))) 
 
-#Show the plot
+#Look at plot
 plot_agreeable
+
+
 ```
+*Interpretation*: The graph shows the slightly negative calculated regression. The intercept value is -0.18. The graph and the calculated regression seem to match in this case as well. 
+
 
 ##Openness
 
 ```{r}
-plot_openness <- ggplot(data_scatter_plot_extreme, 
-                         aes(y = D, x = mean_openness, 
-                             color = extreme_score_IAT, 
-                             shape = extreme_score_IAT)) +
-  geom_jitter(data = filter(data_scatter_plot_extreme, extreme_score_IAT != "Extreme"),
+
+plot_openness <-  ggplot(data_extreme_scores, 
+                             aes(y = D, 
+                             x = mean_openness, 
+                             color = extreme_score_IAT)) +
+  geom_jitter(aes(shape = extreme_score_IAT), #add different shapes for IAT extreme Scores 
               alpha = 0.7,
-              width = 0.2, size = 2.5) +  
-  geom_smooth(method = "lm",
-              aes(group = 1),  
-              color = "#34495e",
+              width = 0.2, 
+              size = 2.5) +  
+  geom_smooth(formula = y ~ x, 
+              method = "lm", 
+              color = "#34495e", 
               size = 0.8) +
-  geom_point(data = filter(data_scatter_plot_extreme, extreme_score_IAT == "Extreme"),
-             size = 2.2) +  # Adjust the size for the triangular points
-  scale_color_manual(values = c("Normal" = "#2196F3", "Extreme" = "#673AB7"),
-                     guide = guide_legend(title = "IAT Score Type")) +
+  scale_color_manual(values = c("Normal" = "#2196F3", 
+                                "Extreme" = "#673AB7"), #values and colors for legend
+                     guide = guide_legend(title = "IAT Score Type")) + #title for legend
   scale_shape_manual(values = c("Normal" = 16, "Extreme" = 17),
-                     guide = guide_legend(title = "IAT Score Type")) +
+                     guide = guide_legend(title = "IAT Score Type")) + #shape for legend
   ylab("D Score") +
   xlab("Openness") +
   ggtitle("Regression Analysis: Openness Predicting IAT Scores") +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(1, 6, 1),
-                     limits = c(1, 6)) +
-  scale_y_continuous(breaks = seq (-2, 2, 1),
-                     limits =c(-2, 2))+
-  coord_cartesian(xlim = c(1, 6)) +
-  theme(panel.grid.minor = element_blank(), 
+  scale_x_continuous(breaks = seq(1, 6, 1), limits = c(1, 6)) + #breaks and limits for x-axis
+  scale_y_continuous(breaks = seq(-2, 2, 1), limits = c(-2, 2)) + #breaks and limits for y-axis
+  theme(panel.grid.minor = element_blank(), #plot appearance 
         axis.title.x = element_text(size = 12, face = "bold", margin = margin(t=15), hjust = 0.5), 
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.text = element_text(size = 10),
         legend.box.background = element_rect(color = "black", size = 0.5),
-        plot.title = element_text(hjust = 0.5, size = 14, margin = margin (b =20))) 
+        plot.title = element_text(hjust = 0.5, size = 14, margin = margin(b = 20, t = 15))) 
 
-#Show the plot
-
+#Look at plot
 plot_openness
 
+
 ```
+*Interpretation*: Finally, the openness is also consistent with the calculated data. Although nowhere significant, the intercept of -0.25 seems to be approximately reproduced. A negative trend would be expected, which seems impossible to interpret from this diagram.  
 
 
-## Combining plots
-
-
+## Combining the plots 
 ```{r}
 
-library(cowplot)
-install.packages("cowplot")
+#Remove all legends and titles 
 
+final_plot_extroversion <- plot_extroversion + theme(legend.position = "none")  + labs(title = "")
+final_plot_conscient <- plot_conscient + theme(legend.position = "none")  + labs(title = "")
+final_plot_neuroticism <- plot_neuroticism + theme(legend.position = "none")  + labs(title = "")
+final_plot_agreeable <- plot_agreeable + theme(legend.position = "none")  + labs(title = "")
+final_plot_openness <- plot_openness + theme(legend.position = "none") + labs(title = "")
 
-# Assuming you have individual facet plots: plot_extroversion, plot_conscient, plot_neuroticism, plot_agreeable, plot_openness
 
 # Arrange the facet plots in a grid
-facet_plots <- plot_grid(plot_extroversion, plot_agreeable, plot_conscient, plot_neuroticism, plot_openness, ncol = 2)
-
-# Add a common title to the combined plot
-combined_plot <- facet_plots +
-  ggtitle("Regression Analysis: BFI Subscale Scores Predicting IAT Scores") +
-  theme(plot.title = element_text(hjust = 0.5, size = 16, margin = margin(b = 20)))
-
-combined_
-
-
-
-
-#First we have to remove the legends from the plots 
-
-combined_plot <- plot_extroversion + plot_conscient + plot_neuroticism + plot_agreeable + plot_openness
-
+combined_plot <- plot_grid(final_plot_extroversion, 
+                           final_plot_agreeable, 
+                           final_plot_conscient, 
+                           final_plot_neuroticism, 
+                           final_plot_openness, 
+                           ncol = 3) +
+  ggtitle("Regression Analysis: BFI Subscale Scores Predicting IAT Scores") + #Add overall title
+  theme(plot.title = element_text(hjust = 0.5, size = 16, margin = margin(b = 5)), #Adjust distance between                                                                                     title and plots
+        plot.margin = margin(40, 40, 40, 40),
+        panel.background = element_rect(fill = "white", color = NA))#Adjust distances from border to                                                                             plots/title and remove outline
+ 
+#Show the plot
 combined_plot
 
-#Combining a plot (with +)
-combined_plot <- splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot
-
-
-print(combined_plot)
-
-#This does not look too pretty so you can modify the codes 
-
-
-# Customize the appearance of the combined plot
-combined_plot <- (splithistogram2_plot + splitviolin2_plot + raincloudplot2_plot +
-  plot_layout(ncol = 3) +  # Set the number of columns
-  theme_minimal() +        # Use a minimal theme
-  theme(
-    plot.margin = margin(15, 15, 15, 15),  # Adjust overall margins
-    strip.text = element_text(size = 10),   # Adjust text size in facet labels
-    legend.position = "bottom",             # Move the legend to the bottom
-    legend.direction = "horizontal",        # Arrange legend items horizontally
-    legend.box = "horizontal" , 
-  axis.text.x = element_blank(),          # Remove x-axis labels
-    axis.text.y = element_blank() # Use a horizontal legend box
-  )
-)
-
-# Print the customized combined plot
-print(combined_plot)
 
 
 ```
 
 ## Saving plots
 
-Save plots to disk with `ggsave()`
-
-\TODO Save the above combined plot to disk as both .png and .pdf. Ensure the png has at least 300dpi resolution.
-
 ```{r}
 
-ggsave("combined_plot.png", combined_plot, width = 15, height = 5, units = "in", dpi = 300)
+ggsave("combined_plot_Final_Assignment.png", combined_plot, width = 15, height = 5, units = "in", dpi = 600)
 
-ggsave("combined_plot.pdf", combined_plot, width = 15, height = 5, units = "in", dpi = 300)
+ggsave("combined_plot_Final_Assignment.pdf", combined_plot, width = 15, height = 5, units = "in", dpi = 600)
 
-#Both of them are in the same folder as analysis and processing
 
 
 ```

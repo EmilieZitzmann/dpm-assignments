@@ -419,7 +419,7 @@ data_iat_score <- D |>
 
 ### Sanity Check
 
-1. A first sanity check verifies that each D score falls within the specified logical range of -2 to +2
+A first sanity check verifies that each D score falls within the specified logical range of -2 to +2
 
 ```{r}
 

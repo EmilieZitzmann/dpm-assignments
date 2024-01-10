@@ -2351,10 +2351,8 @@ response times in blocks 3, 4, 6 and 7 (‘SD’) and the Greenwald score
 <span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a>  <span class="fu">left_join</span>(SD, <span class="at">by =</span> <span class="st">&quot;unique_id&quot;</span>) </span></code></pre></div>
 <div id="sanity-check-1" class="section level3">
 <h3>Sanity Check</h3>
-<ol style="list-style-type: decimal">
-<li>A first sanity check verifies that each D score falls within the
-specified logical range of -2 to +2</li>
-</ol>
+<p>A first sanity check verifies that each D score falls within the
+specified logical range of -2 to +2</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co">#Define the min and max variable, again do not take the same ones as above</span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a></span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>min_range_d <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span>  </span>

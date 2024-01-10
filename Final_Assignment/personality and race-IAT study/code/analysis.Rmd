@@ -61,6 +61,7 @@ data_processed_after_exclusions <- data_processed |>
 ```{r}
 
 data_processed |>
+  distinct(unique_id) |>
   count(name = "n") |>
   kable() |>
   add_header_above(header = c( "Sample before exclusions" = 1)) |> 
@@ -175,7 +176,7 @@ Cronbach's alpha is calculated for each BFI subscale. This parameter is an impor
 
 cronbach_alpha_extroversion <- data_processed_after_exclusions |>
   select(contains("bfi_e")) |>
-  psych::alpha()
+  psych::alpha() #specify psych 
 
 print(cronbach_alpha_extroversion)
 
@@ -756,34 +757,39 @@ plot_openness
 *Interpretation*: Finally, the openness is also consistent with the calculated data. Although nowhere significant, the intercept of -0.25 seems to be approximately reproduced. A negative trend would be expected, which seems impossible to interpret from this diagram.  
 
 
-## Combining the plots 
+## Combined Plot
 ```{r}
 
 #Remove all legends and titles 
 
-final_plot_extroversion <- plot_extroversion + theme(legend.position = "none")  + labs(title = "")
-final_plot_conscient <- plot_conscient + theme(legend.position = "none")  + labs(title = "")
+final_plot_extroversion <- plot_extroversion + theme(legend.position = "none") + labs(title = "")  
+final_plot_conscient <- plot_conscient + theme(legend.position = "none")  + labs(title = "") 
 final_plot_neuroticism <- plot_neuroticism + theme(legend.position = "none")  + labs(title = "")
 final_plot_agreeable <- plot_agreeable + theme(legend.position = "none")  + labs(title = "")
 final_plot_openness <- plot_openness + theme(legend.position = "none") + labs(title = "")
 
-
-# Arrange the facet plots in a grid
-combined_plot <- plot_grid(final_plot_extroversion, 
-                           final_plot_agreeable, 
-                           final_plot_conscient, 
-                           final_plot_neuroticism, 
-                           final_plot_openness, 
-                           ncol = 3) +
-  ggtitle("Regression Analysis: BFI Subscale Scores Predicting IAT Scores") + #Add overall title
-  theme(plot.title = element_text(hjust = 0.5, size = 16, margin = margin(b = 5)), #Adjust distance between                                                                                     title and plots
+# Combine the plots and add the title
+combined_plot <- plot_grid(final_plot_extroversion,
+                           final_plot_agreeable,
+                           final_plot_conscient,
+                           final_plot_neuroticism,
+                           final_plot_openness,
+                           ncol = 3,
+                           align = "v",
+                           axis = "l",
+                           labels = c("", "", "", "", "")) +
+  ggtitle("Regression Analysis: BFI Subscale Scores Predicting IAT Scores") +
+  theme(strip.background = element_blank(),  # Remove strip labels
+        plot.title = element_text(hjust = 0.5, 
+                                  size = 16, 
+                                  margin = margin(b = 20, 
+                                                  t = 10, 
+                                                  unit = "pt")),  # Adjust margin for the title
         plot.margin = margin(40, 40, 40, 40),
-        panel.background = element_rect(fill = "white", color = NA))#Adjust distances from border to                                                                             plots/title and remove outline
- 
-#Show the plot
-combined_plot
+        panel.background = element_rect(fill = "white", color = "white"))
 
-
+# Show the plot
+print(combined_plot)
 
 ```
 
@@ -791,10 +797,9 @@ combined_plot
 
 ```{r}
 
-ggsave("combined_plot_Final_Assignment.png", combined_plot, width = 15, height = 5, units = "in", dpi = 600)
+ggsave(filename = "combined_plot_Final_Assignment.png", plot = combined_plot, path = "../communications", width = 12, height = 8, bg = "white") #Set the background for the title as otherwhise it goes black
 
-ggsave("combined_plot_Final_Assignment.pdf", combined_plot, width = 15, height = 5, units = "in", dpi = 600)
-
+ggsave(filename = "combined_plot_Final_Assignment.pdf", plot = combined_plot, path = "../communications", width = 12, height = 8)
 
 
 ```

@@ -76,11 +76,11 @@ check_Id <- data_raw_demographics |>
 
 data_age_gender <- data_raw_demographics |>
   select(unique_id, variable, response) |>
- filter(!is.na(unique_id)) |> #filter out the NA 
+  filter(!is.na(unique_id)) |> #filter out the NA 
   pivot_wider(names_from = variable,
               values_from = response) |> 
   rename(gender = sex) |>
-  mutate(gender = case_when( gender %in% c("f", "m") ~ gender, #returns current value for gender if TRUE
+  mutate(gender = case_when(gender %in% c("f", "m") ~ gender, #returns current value for gender if TRUE
                              is.na(gender) ~ "other/missing/error", #if gender equals NA
                              TRUE ~ "other/missing/error"), #if none of the set conditions is true 
          age = case_when(str_detect(age, "^[0-9]+$") ~ age, #setting the wanted value for age = number
@@ -399,7 +399,7 @@ mean1 <- data_iat_corrected |>
 mean2 <- data_iat_corrected |>
   filter(block_number %in% c(4, 7)) |>  
   group_by(unique_id) |> 
-  summarize(mean2 = mean(trial_reaction_time_in_ms, na.rm = TRUE)) 
+  summarise(mean2 = mean(trial_reaction_time_in_ms, na.rm = TRUE)) 
 
 
 #Calculation of SD Reaction Time in block 3, 4, 6, 7: 
@@ -407,7 +407,7 @@ mean2 <- data_iat_corrected |>
 SD <- data_iat_corrected |>
   filter(block_number %in% c(3, 4, 6, 7)) |>  
   group_by(unique_id) |> 
-  summarize(SD = sd(trial_reaction_time_in_ms, na.rm = TRUE)) 
+  summarise(SD = sd(trial_reaction_time_in_ms, na.rm = TRUE)) 
 
 
 #D is calculated through (mean2 - mean1)/SD. 
@@ -468,7 +468,7 @@ data_iat_incomplete <- data_iat_corrected |>
   mutate(trial_count = sum(block_number %in% c(3, 4, 6, 7))) |>
   ungroup() |>
   mutate(iat_completed_trials = ifelse(trial_count == 120, "include", "exclude")) |>
-  select(unique_id, iat_completed_trials) %>%
+  select(unique_id, iat_completed_trials) |>
   distinct()  # Only keep one row per ID as they have multiple rows due to several trials 
 
 ```

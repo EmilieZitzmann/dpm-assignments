@@ -1944,11 +1944,11 @@ exclusion at a later stage, if required.</p>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>data_age_gender <span class="ot">&lt;-</span> data_raw_demographics <span class="sc">|&gt;</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="fu">select</span>(unique_id, variable, response) <span class="sc">|&gt;</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(unique_id)) <span class="sc">|&gt;</span> <span class="co">#filter out the NA </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(unique_id)) <span class="sc">|&gt;</span> <span class="co">#filter out the NA </span></span>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> variable,</span>
 <span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>              <span class="at">values_from =</span> response) <span class="sc">|&gt;</span> </span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">gender =</span> sex) <span class="sc">|&gt;</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">gender =</span> <span class="fu">case_when</span>( gender <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;f&quot;</span>, <span class="st">&quot;m&quot;</span>) <span class="sc">~</span> gender, <span class="co">#returns current value for gender if TRUE</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">gender =</span> <span class="fu">case_when</span>(gender <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;f&quot;</span>, <span class="st">&quot;m&quot;</span>) <span class="sc">~</span> gender, <span class="co">#returns current value for gender if TRUE</span></span>
 <span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>                             <span class="fu">is.na</span>(gender) <span class="sc">~</span> <span class="st">&quot;other/missing/error&quot;</span>, <span class="co">#if gender equals NA</span></span>
 <span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>                             <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;other/missing/error&quot;</span>), <span class="co">#if none of the set conditions is true </span></span>
 <span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>         <span class="at">age =</span> <span class="fu">case_when</span>(<span class="fu">str_detect</span>(age, <span class="st">&quot;^[0-9]+$&quot;</span>) <span class="sc">~</span> age, <span class="co">#setting the wanted value for age = number</span></span>
@@ -1990,22 +1990,20 @@ across().</p>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>data_reversed_items <span class="ot">&lt;-</span> data_raw_bfi <span class="sc">|&gt;</span></span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(vector_reversed_items), <span class="sc">~</span><span class="dv">7</span> <span class="sc">-</span> .)) <span class="co">#&#39;.&#39; represents column values that are subtracted                                                            from 7 (by performing ~7). This produces the                                                                reverted items. </span></span></code></pre></div>
 <p>###Sanity Check</p>
-<ol style="list-style-type: decimal">
-<li><p>To check whether the reversals are likely to be correct a
-correlation matrix for each variable is created. If the correlation is
-negative or rather low it could indicate that the reversing was not
-carried out properly. As the Big Five tend to be normally distributed
-the Pearson correlation is used to calculate the matrix. The ‘use’
-within the correlation function is set to complete.obs, which means that
-variables that contain missing data are not included. This is important
+<p>To check whether the reversals are likely to be correct a correlation
+matrix for each variable is created. If the correlation is negative or
+rather low it could indicate that the reversing was not carried out
+properly. As the Big Five tend to be normally distributed the Pearson
+correlation is used to calculate the matrix. The ‘use’ within the
+correlation function is set to complete.obs, which means that variables
+that contain missing data are not included. This is important
 considering that the participants only filled out two or three of the
 subscales which is producing some NA for each row, hindering to
 calculate the correlation correctly.</p>
 <p>In order to make sure that the newly created correlation matrix with
 the reverted items produces less/no negative results, a matrix is
 calculated for the original dataset and compared with the matrix of the
-reversed one.</p></li>
-</ol>
+reversed one.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co">#Extroversion</span></span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>Matrix_extroversion_reversed <span class="ot">&lt;-</span> data_reversed_items <span class="sc">|&gt;</span></span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">contains</span>(<span class="st">&quot;bfi_e&quot;</span>)) <span class="sc">|&gt;</span></span>
@@ -2059,12 +2057,10 @@ effective, as the only remaining negative correlation can be observed
 between items bfi_o7 and bfi_o10. In comparison to the original matrix,
 there is a substantial reduction in the overall negative
 correlations.</p>
-<ol start="2" style="list-style-type: decimal">
-<li>A second sanity check is that the logical minimum (1) and maximum
-(6) are not violated. In order to check that an exclusion variable is
+<p>A second sanity check is that the logical minimum (1) and maximum (6)
+are not violated. In order to check that an exclusion variable is
 created that sets participants with impossible data to ‘exclude’. Again
-specific information is selected with c_across()</li>
-</ol>
+specific information is selected with c_across()</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co">#Defining the vector for maximum and minimum </span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>logical_min <span class="ot">&lt;-</span> <span class="dv">1</span> </span>
@@ -2115,8 +2111,7 @@ unique_id
 </tr>
 </tbody>
 </table>
-<ol start="3" style="list-style-type: decimal">
-<li>To perform a third quality check of the BFI data, we ensure that all
+<p>To perform a third quality check of the BFI data, we ensure that all
 participants have completed data for the surveys they filled out.
 Initially, a new variable is created for each survey and assigned
 ‘include’ if all values in the specified row of the survey are present
@@ -2128,8 +2123,7 @@ exclusions, taking into account that individuals with missing
 information may still have completed at least 2 questionnaires. In the
 final step, this cleaned data frame is merged with the reversed data
 frame and all newly added rows are removed, resulting in a refined and
-cleaned dataset.</li>
-</ol>
+cleaned dataset.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co">#Extroversion</span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a> data_extroversion_exclusion <span class="ot">&lt;-</span> data_reversed_items <span class="sc">|&gt;</span> </span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>   <span class="fu">rowwise</span>() <span class="sc">|&gt;</span> </span>
@@ -2411,7 +2405,7 @@ incomplete IAT data at trial level to ‘exclude’. The IAT should contain
 <span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">trial_count =</span> <span class="fu">sum</span>(block_number <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">7</span>))) <span class="sc">|&gt;</span></span>
 <span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
 <span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">iat_completed_trials =</span> <span class="fu">ifelse</span>(trial_count <span class="sc">==</span> <span class="dv">120</span>, <span class="st">&quot;include&quot;</span>, <span class="st">&quot;exclude&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>  <span class="fu">select</span>(unique_id, iat_completed_trials) <span class="sc">%&gt;%</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>  <span class="fu">select</span>(unique_id, iat_completed_trials) <span class="sc">|&gt;</span></span>
 <span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>  <span class="fu">distinct</span>()  <span class="co"># Only keep one row per ID as they have multiple rows due to several trials </span></span></code></pre></div>
 <p><em>Interpretation</em> : Some individuals have uncompleted trial
 data and must therefore be set to ‘exclude’.</p>

@@ -1,13 +1,13 @@
 ---
 title: "Examining the relationship between the big-5 personality facets and implicit racial attitudes"
-subtitle: "Data processing"
-author: "Template: Ian Hussey; content: Emilie"
-date: "`2024-01-03`"
+subtitle: "Processing"
+author: "Template: Ian Hussey, content = Emilie"
+date: "`2024-01-10`"
 output:
   html_document:
     code_folding: hide
     highlight: haddock
-    theme: flatly
+    theme: cerulean
     toc: yes
     toc_float: yes
 ---
@@ -55,7 +55,6 @@ data_raw_iat <- read_csv("../data/raw/data_raw_iat.csv") |>
 
 Study participants had the option to provide their age and gender, although this was optional, meaning that missing data is not considered an exclusion criterion in this context. 
 
-
 ## Extraction of Age and Gender
 
 Age and Gender should be extracted from the dataframe. As these are both within 'variable' two new variables named 'Age' and 'Gender' have to be created by using pivot_wider(). 
@@ -89,8 +88,7 @@ data_age_gender <- data_raw_demographics |>
 
 ```
 
-
-#BFI 
+# BFI 
 
 As part of the study, each respondent was asked to complete between two and three subscales of the Big 5 personality inventory.
 
@@ -103,7 +101,6 @@ check_bfi <-  data_raw_bfi |>
 
 ```
 
-
 ## Reverse Score negatively worded items
 
 Specific items were worded negatively. These items need to be reversed in order to be suitable for analysis. This applies to the items: 
@@ -115,7 +112,7 @@ Specific items were worded negatively. These items need to be reversed in order 
 -	openness items: bfi_o7, bfi_o9 
  
 Each value can reach a maximum of 6 and a minimum of 1. In order to return the Items we must remember that the reverted scale is behaving inversely to the positive one so 1 = 6, 2 =5, 3=4, 4=3, 2= 5, 6=1. 
-The easiest way to revert a scale is  to add 1 to the maximum value in order to subtract the original value from it. This way we get the reversed score value. 
+The easiest way to revert a scale is to add 1 to the maximum value in order to subtract the original value from it. This way we get the reversed score value. 
 
 To modify the data the mutate() function is used, to apply the function on multiple columns e.g. the produced vector we can use across(). 
 
@@ -130,7 +127,7 @@ data_reversed_items <- data_raw_bfi |>
 ```
 
 
-###Sanity Check 
+### Sanity Check 
 
 To check whether the reversals are likely to be correct a correlation matrix for each variable is           created. If the correlation is negative or rather low it could indicate that the reversing was not          carried out properly. As the Big Five tend to be normally distributed the Pearson correlation is used to calculate the matrix. The 'use' within the correlation function is set to complete.obs, which means that    variables that contain missing data are not included. This is important considering that the participants  only filled out two or three of the subscales which is producing some NA for each row, hindering to         calculate the correlation correctly. 
 
@@ -192,7 +189,6 @@ Matrix_openness_original <- data_raw_bfi |>
 
 *Interpretation*: The reversal procedure appears to be effective, as the only remaining negative            correlation can be observed between items bfi_o7 and bfi_o10. In comparison to the original matrix, there   is a substantial reduction in the overall negative correlations. 
 
-
 A second sanity check is that the logical minimum (1) and maximum (6) are not violated. In order to check   that an exclusion variable is created that sets participants with impossible data to 'exclude'. Again       specific information is selected with c_across()
 
 ```{r}
@@ -226,7 +222,6 @@ data_logical_number |>
   kable_classic(full_width = FALSE)
 
 ```
-
 
 To perform a third quality check of the BFI data, we ensure that all participants have completed data for   the surveys they filled out. Initially, a new variable is created for each survey and assigned 'include'    if all values in the specified row of the survey are present and not missing. We then filter out the        'excluded' observations based on that criterion. After summarizing this information in a new data frame,    the dataset is further refined by excluding people who completed less than two questionnaires. This step    aims to minimize unnecessary exclusions, taking into account that individuals with missing information      may still have completed at least 2 questionnaires. In the final step, this cleaned data frame is merged    with the reversed data frame and all newly added rows are removed, resulting in a refined and cleaned       dataset.
 
@@ -310,8 +305,7 @@ data_completed_exclusion |>
 
 ```
 
-
-##Mean score BFI
+## Mean score BFI
 
 The mean values corresponding to the subscales in the Big Five Inventory for subsequent analysis are calculated. To ensure the integrity of the data, it was made sure that the mean values corresponded to the defined minimum and maximum values. 
 
@@ -357,8 +351,7 @@ data_mean_violation_bfi |>
 
 ```
 
-
-#IAT 
+# IAT 
 
 Within the study each participant completed an Implicit Association Test assessing implicit racial evaluations between African-American and European-American people. Block 1, 2, 5 are practice blocks and must be discarded for analysis calculations. 
 
@@ -378,7 +371,6 @@ data_iat_corrected <- data_raw_iat |>
          trial_reaction_time_in_ms = as.numeric(trial_reaction_time_in_ms))
 
 ```
-
 
 ## Scoring the trial-level data 
 
@@ -425,8 +417,7 @@ data_iat_score <- D |>
   left_join(SD, by = "unique_id") 
 ```
 
-
-###Sanity Check
+### Sanity Check
 
 1. A first sanity check verifies that each D score falls within the specified logical range of -2 to +2
 
@@ -456,7 +447,6 @@ data_d_violation |>
 
 ```
 
-
 ## Exclusion Variable for incomplete IAT data
 
 An exclusion variable is created that sets participants with incomplete IAT data at trial level to        'exclude'. The IAT should contain 120 trials in the relevant test blocks required for the analysis.
@@ -483,7 +473,6 @@ data_iat_incomplete |>
   kable() |>
   kable_classic(full_width = FALSE)
 ```
-
 
 ## Exclusion Variable for IAT performance
 
@@ -527,7 +516,6 @@ The datasets are to be merged into a single dataframe, ensuring each participant
 -	data_d_violation
 -	data_iat_incomplete
 -	data_iat_exclusion
-
 
 ```{r}
 
@@ -614,7 +602,6 @@ if(!file.exists("../data/processed/data_processed_codebook.xlsx")){ # convert th
 
 ```
 
-
 # Session info
 
 ```{r}
@@ -622,5 +609,3 @@ if(!file.exists("../data/processed/data_processed_codebook.xlsx")){ # convert th
 sessionInfo()
 
 ```
-
-

@@ -2,12 +2,12 @@
 title: "Examining the relationship between the big-5 personality facets and implicit racial attitudes"
 subtitle: "Analysis"
 author: "Template: Ian Hussey; content: Emilie"
-date: "`2024-01-03')`"
+date: "`2024-01-10`"
 output:
   html_document:
     code_folding: hide
     highlight: haddock
-    theme: flatly
+    theme: cerulean
     toc: yes
     toc_float: yes
 ---
@@ -115,8 +115,7 @@ data_processed_after_exclusions |>
 
 ```
 
-
-##Demographic summary: Gender
+## Demographic summary: Gender
 
 The total number and percentage of participants categorized as female, male and "other/missing/missing" are calculated.
 
@@ -163,14 +162,13 @@ data_processed_after_exclusions |>
 
 ```
 
-#BFI 
+# BFI 
 
-##Cronbachs Alpha 
+## Cronbachs Alpha 
 
 Cronbach's alpha is calculated for each BFI subscale. This parameter is an important value to calculate as it provides an indication of the so-called internal consistency of a questionnaire. It indicates the extent to which each subscale with its group of items captures the underlying latent construct, i.e. how well the BFI subscale depicts the respective trait. Therefore, Cronbach's alpha serves an important role in the assessment of the reliability of tests, as it provides information about the accuracy of a measurement. 
 
-
-###Extroversion
+### Extroversion
 
 ```{r}
 
@@ -186,8 +184,7 @@ print(cronbach_alpha_extroversion)
 
 *Interpretation*: Cronbach's alpha for extroversion equals 0.81. The value can be obtained under "raw_alpha". Although an alpha of over 0.8 is considered good, it is important to note that no standardized values for assessing alpha have been established. Therefore, values of 0.8 are occasionally described as merely acceptable or even very good. By comparing the items individually, it can be concluded that they all show comparable alpha values, with item bfi_e5 having the lowest and item bfi_e3 showing the highest alpha. However, as all of them are situated in a similar range, it seems that a more detailed analysis of the items is superfluous. Furthermore, the confidence interval can provide information about the quality of alpha, whereby the lower value of 0.76 still indicates a rather high overall value. 
 
-
-###Conscientiousness 
+### Conscientiousness 
 
 ```{r}
 
@@ -201,7 +198,7 @@ print(cronbach_alpha_conscient)
 
 *interpretation*: The rounded alpha score of 0.8 indicates a sound value in this category again. The items correlate closely with each other, so that a conclusion about the construct of conscientiousness appears justifiable within subsequent analysis. Nevertheless, it must be emphasized that individual items perform lower compared to others. In particular, bfi_c1 and bfi_c8 show a significantly lower alpha value relative to the other items. It could therefore be advisable to examine these items further, regardless of the overall alpha value. 
 
-###Neuroticism 
+### Neuroticism 
 
 ```{r}
 
@@ -215,7 +212,7 @@ print(cronbach_alpha_neuroticism)
 
 *Interpretation*: The Cronbachs alpha of 0.79 can be classified as acceptable to good. Except for one item, the eight items show a similarly high alpha and the lower limit within the confidence interval of 0.73 can also be considered acceptable. Nevertheless, item bfi_n6 appears to have a considerably lower value compared to the other items. Again, it might be advisable to check the item further in order to identify a reason behind this. 
 
-###Agreeableness
+### Agreeableness
 
 ```{r}
 
@@ -227,10 +224,10 @@ print(cronbach_alpha_agreeable)
 
 
 ```
+
 *Interpretation*: Similarly, the alpha of 0.78 can be classified as acceptable to good. Item bfi_a7 appears to perform slightly better than the others, but all other items appear to have similarly good inter-item correlations. The lower confidence interval of 0.73 likewise shows an acceptable value. 
 
-
-###Openness
+### Openness
 
 ```{r}
 
@@ -244,14 +241,13 @@ print(cronbach_alpha_openness)
 
 *Interpretation*: Both Cronbach's alpha of 0.81 and a lower confidence interval value of 0.76 can be regarded as acceptable and/or good. 
 
-
-#Descriptive Plots
+# Descriptive Plots
 
 ## BFI Distribution Histograms 
 
 A series of histograms illustrates the distribution of the average values across the BFI subscales. Participants rated each item on a scale from 1 to 6. 
 
-###Extroversion 
+### Extroversion 
 
 ```{r}
 
@@ -332,7 +328,7 @@ ggplot(data_processed_after_exclusions, aes(x = mean_neuroticism)) +
  
 ```
 
-###Agreeableness 
+### Agreeableness 
 
 ```{r}
 
@@ -437,13 +433,11 @@ bfi_iat_corr_matrix <- data_processed_after_exclusions |>
 
 *Interpretation*: None of the correlations seemed to be significant. 
 
+# Hypothesis testing
 
-#Hypothesis testing
-
-##Hypothesis 1 
+## Hypothesis 1 
 
 A first hypothesis posits a difference between men and women in terms of their mean IAT scores. In order to test whether there are any discrepancies, a t-test is computed. Thereby, the mean values of men and women are being compared and tested for significant difference. 
-
 
 ```{r}
 
@@ -470,12 +464,11 @@ report_text(H1_Result)
 
 *Interpretation*: The effect is very small, positive but not statistically significant. Significance is indicated by the p-value, which lies at 0.42, well above the specified value of 0.05 maximum. In addition, the confidence interval indicates a non-significant correlation as well, since it contains 0. Based on our data, it can therefore not be concluded that men and women differ significantly in their IAT mean scores.
 
-
-##Hypothesis 2: 
+## Hypothesis 2: 
 
 A second hypothesis states that each BFI subscale predicts IAT scores. For testing this assumption, a regression analysis is calculated for each BFI subscale separately. The regression calculates the relationship and possible interactions between two variables. In this case, the response variable is the IAT score and the predictor that is supposed to predict the IAT score is the respective subscale of the BFI. Given that the calculated correlations between the D score and the BFI subscales were not significant, it can be assumed that the regressions are likewise unlikely to be significant, as both constructs are closely related. 
 
-###Extroversion
+### Extroversion
 
 ```{r}
 
@@ -486,9 +479,10 @@ Regression_Extroversion <- lm(D ~ mean_extroversion, data= data_processed_after_
 report(Regression_Extroversion)
 
 ```
+
 *Interpretation*: The regression was not significant. Therefore, the Extroversion subscale is unable to predict IAT scores on the basis of the data provided. 
 
-###Conscientiousness 
+### Conscientiousness 
 
 ```{r}
 
@@ -499,9 +493,10 @@ Regression_Conscient <- lm(D ~ mean_conscient, data = data_processed_after_exclu
 report(Regression_Conscient)
 
 ```
+
 *Interpretation*: The regression was not significant. Therefore, the Conscientiousness subscale is unable to predict IAT scores on the basis of the data provided. 
 
-###Neuroticism
+### Neuroticism
 
 ```{r}
 
@@ -512,9 +507,10 @@ Regression_Neuroticism <- lm(D ~ mean_neuroticism, data = data_processed_after_e
 report(Regression_Neuroticism)
 
 ```
+
 *Interpreation*: The regression was not significant. Therefore, the Neuroticism subscale is unable to predict IAT scores on the basis of the data provided. 
 
-###Agreeableness
+### Agreeableness
 
 ```{r}
 
@@ -525,9 +521,10 @@ Regression_Agreeable <- lm(D ~ mean_agreeable, data= data_processed_after_exclus
 report(Regression_Agreeable)
 
 ```
+
 *Interpretation*: The regression was not significant. Therefore, the Agreeableness subscale is unable to predict IAT scores on the basis of the data provided. 
 
-###Openness
+### Openness
 
 ```{r}
 
@@ -539,16 +536,14 @@ report(Regression_Openness)
 
 
 ```
+
 *Interpretation*: The regression was not significant. Therefore, the Openness subscale is unable to predict IAT scores on the basis of the data provided. 
 
-
-
-#Regression Plots 
+# Regression Plots 
 
 Create series of scatter plots of how BFI subscale scores predict IAT scores. Add regression lines. These plots therefore illustrate the same results as the regressions above. Make the plots presentable and publication quality- you may decide the details of this with one exception: Extreme scores on the IAT (defined as participants whose scores in the top and bottom 10% of IAT scores) should use a triangular shape rather than a dot. A single combined plot should be created, containing 5 component plots, with the personality facet being examined in each clearly labelled. This plot should be printed in the html file but also saved to disk as both png/pdf.
 
-
-##Extroversion
+## Extroversion
 ```{r}
 #Create a new variable with extreme 10% top and bottom IAT Scores in order to plot them later  
 data_extreme_scores <- data_processed_after_exclusions |>
@@ -589,10 +584,10 @@ plot_extroversion <-  ggplot(data_extreme_scores,
 plot_extroversion
 
 ```
+
 *Interpretation*: As can be seen in the regression calculation above, the effect is not significant, but slightly positive. This can be derived from the diagram, albeit only to a very small extent. The intercept is at -0.43, which also seems to be consistent within the diagram.
 
-
-##Conscientiousness 
+## Conscientiousness 
 
 ```{r}
 
@@ -630,10 +625,10 @@ plot_conscient <-  ggplot(data_extreme_scores,
 plot_conscient
 
 ```
+
 *Interpretation*: Although the effect is again not significant, it appears to be slightly negative for the Conscientiousness subscale. This seems to be clear from the diagram, but it is very difficult to read. The intercept is -0.18, which also appears to be consistent in the diagram.
 
-
-##Neuroticism
+## Neuroticism
 
 ```{r}
 plot_neuroticism <-  ggplot(data_extreme_scores, 
@@ -670,10 +665,10 @@ plot_neuroticism <-  ggplot(data_extreme_scores,
 plot_neuroticism
 
 ```
+
 *Interpretation*: Again, there appears to be a slightly positive trend in the regression line. However, as seen in the calculation, it is not significant and only has a faint indication. The intercept for neuroticism lies at -0.35, and this appears to be consistent with the graph. 
 
-
-##Agreeableness 
+## Agreeableness 
 
 ```{r}
 
@@ -712,10 +707,10 @@ plot_agreeable
 
 
 ```
+
 *Interpretation*: The graph shows the slightly negative calculated regression. The intercept value is -0.18. The graph and the calculated regression seem to match in this case as well. 
 
-
-##Openness
+## Openness
 
 ```{r}
 
@@ -754,10 +749,11 @@ plot_openness
 
 
 ```
+
 *Interpretation*: Finally, the openness is also consistent with the calculated data. Although nowhere significant, the intercept of -0.25 seems to be approximately reproduced. A negative trend would be expected, which seems impossible to interpret from this diagram.  
 
-
 ## Combined Plot
+
 ```{r}
 
 #Remove all legends and titles 

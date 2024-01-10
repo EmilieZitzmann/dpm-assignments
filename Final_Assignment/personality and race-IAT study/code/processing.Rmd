@@ -1,8 +1,8 @@
 ---
 title: "Examining the relationship between the big-5 personality facets and implicit racial attitudes"
 subtitle: "Processing"
-author: "Template: Ian Hussey, content = Emilie"
-date: "`2024-01-10`"
+author: "Template: Ian Hussey, content: Emilie"
+date: "2024-01-10"
 output:
   html_document:
     code_folding: hide

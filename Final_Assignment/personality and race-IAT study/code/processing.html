@@ -2054,12 +2054,12 @@ specific information is selected with c_across()</p>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#creating the dataset </span></span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>data_logical_number <span class="ot">&lt;-</span> data_reversed_items <span class="sc">|&gt;</span></span>
 <span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bfi_logical_number_violation =</span> <span class="fu">ifelse</span>(<span class="fu">any</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">c_across</span>(<span class="fu">contains</span>(<span class="st">&quot;bfi&quot;</span>))) <span class="sc">&amp;</span> <span class="co">#selected values are                                                                                         not NA</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bfi_logical_number_violation =</span> <span class="fu">ifelse</span>(<span class="fu">any</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">c_across</span>(<span class="fu">contains</span>(<span class="st">&quot;bfi&quot;</span>))) <span class="sc">&amp;</span> <span class="co">#selected values are not NA</span></span>
 <span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>                                     (<span class="fu">c_across</span>(<span class="fu">contains</span>(<span class="st">&quot;bfi&quot;</span>)) <span class="sc">&lt;</span> logical_min <span class="sc">|</span> </span>
 <span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>                                      <span class="fu">c_across</span>(<span class="fu">contains</span>(<span class="st">&quot;bfi&quot;</span>)) <span class="sc">&gt;</span> logical_max)),</span>
 <span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>                                 <span class="st">&quot;exclude&quot;</span>,</span>
 <span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>                                 <span class="st">&quot;include&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> <span class="co">#Should be used after rowwise to avoid unintended consequences for the next operation</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> <span class="co">#The ungroup() argument is used after rowwise() in order to prevent later calculations being applied rowwise as well</span></span>
 <span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="fu">select</span>(unique_id, bfi_logical_number_violation)</span></code></pre></div>
 <p><em>Interpretation</em>: To check whether individuals violate the
 logical minimum or maximum, they can be identified through filtering.
@@ -2316,7 +2316,7 @@ response times in blocks 3, 4, 6 and 7 (‘SD’) and the Greenwald score
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>mean1 <span class="ot">&lt;-</span> data_iat_corrected <span class="sc">|&gt;</span></span>
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="fu">filter</span>(block_number <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">6</span>)) <span class="sc">|&gt;</span> <span class="co">#select relevant rows </span></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  <span class="fu">group_by</span>(unique_id) <span class="sc">|&gt;</span> <span class="co">#group the data by the unique_Id</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  <span class="fu">group_by</span>(unique_id) <span class="sc">|&gt;</span> <span class="co">#group the data by the unique_id</span></span>
 <span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">mean1 =</span> <span class="fu">mean</span>(trial_reaction_time_in_ms, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="co">#calculating mean RT for unique_id</span></span>
 <span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a></span>
 <span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a></span>

@@ -201,12 +201,12 @@ logical_max <- 6
 #creating the dataset 
 data_logical_number <- data_reversed_items |>
   rowwise() |>
-  mutate(bfi_logical_number_violation = ifelse(any(!is.na(c_across(contains("bfi"))) & #selected values are                                                                                         not NA
+  mutate(bfi_logical_number_violation = ifelse(any(!is.na(c_across(contains("bfi"))) & #selected values are not NA
                                      (c_across(contains("bfi")) < logical_min | 
                                       c_across(contains("bfi")) > logical_max)),
                                  "exclude",
                                  "include")) |>
-  ungroup() |> #Should be used after rowwise to avoid unintended consequences for the next operation
+  ungroup() |> #The ungroup() argument is used after rowwise() in order to prevent later calculations being applied rowwise as well
   select(unique_id, bfi_logical_number_violation)
 
 ```
@@ -382,7 +382,7 @@ First, the average response time ('mean1') is determined for the trials in block
 
 mean1 <- data_iat_corrected |>
   filter(block_number %in% c(3, 6)) |> #select relevant rows 
-  group_by(unique_id) |> #group the data by the unique_Id
+  group_by(unique_id) |> #group the data by the unique_id
   summarize(mean1 = mean(trial_reaction_time_in_ms, na.rm = TRUE)) #calculating mean RT for unique_id
 
 

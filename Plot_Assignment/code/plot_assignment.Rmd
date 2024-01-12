@@ -113,10 +113,9 @@ Consider making use of the many extensions to ggplot2, e.g.: Good sources ( see 
 - ggsignif
 - and others: https://exts.ggplot2.tidyverse.org/gallery/
 
-# Write the plot manually
+# Plot 
 
 ```{r}
-
 
 ## Negative Data
 Negative_Data <- data_video_games_processed |>
@@ -183,9 +182,9 @@ Plot_Negative <- ggplot(Negative_data_long,
             inherit.aes = FALSE) +
   labs(title = "Distribution of Negative Scores Before and After Exposure",
        subtitle = "Comparing Pre- and Posttest", 
-       x = NULL, #Remove the overall X-Axis label 
+       x = NULL, #Remove the x-Axis Label as it provides no additional information 
        y = "Score Range") +
-  coord_cartesian(ylim = c(0, 50)) +  # Set y-axis limit up to 50 
+  coord_cartesian(ylim = c(0, 50)) +  # Set y-axis limit up to 50, since PANAS max is 50 
   scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
   scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
   theme_minimal()+
@@ -221,139 +220,18 @@ Plot_Positive <- ggplot(Positive_data_long,
             inherit.aes = FALSE) +
   labs(title = "Distribution of Positive Scores Before and After Exposure",
        subtitle = "Comparing Pre- and Posttest", 
-       x = NULL, #Remove the overall X-Axis label 
+       x = NULL, 
        y = "Score Range") +
-  coord_cartesian(ylim = c(0, 50)) +  # Set y-axis limit up to 50 
+  coord_cartesian(ylim = c(0, 50)) + 
   scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
   scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
   theme_minimal() +
-  guides(fill = FALSE, color = FALSE) + #Remove legend
-  scale_x_discrete(labels = c("Pretest", "Posttest")) #Modify x-Axis labels 
+  guides(fill = FALSE, color = FALSE) + 
+  scale_x_discrete(labels = c("Pretest", "Posttest")) 
 
-```
-### Apply function to directly create the plot without all of the work above 
-Still does not work properly as it puts negative and positive within one dataframe. It should be the other way around. 
 
-```{r}
-# Load necessary libraries
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# Function to create violin and box plots
-create_plot <- function(data_long, mean_values, title, y_label, test_labels) {
-  ggplot(data_long,
-         aes(x = Test_Type, y = Score, fill = Test_Type, color = Test_Type)) +
-    geom_violin(trim = FALSE, alpha = 0.5) +
-    geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-    geom_text(data = mean_values, 
-              aes(x = Test_Type, y = max(data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-              position = position_dodge(width = 0.75), 
-              vjust = -0.5, size = 6, show.legend = FALSE, inherit.aes = FALSE, color = "darkred", fontface = "bold") +
-    labs(title = title, subtitle = "Comparing Pre- and Posttest", x = NULL, y = y_label) +
-    coord_cartesian(ylim = c(0, 50)) +
-    scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
-    scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
-    theme_minimal() +
-    guides(fill = FALSE, color = FALSE) +
-    scale_x_discrete(labels = test_labels)
-}
-
-# Negative Data Processing
-Negative_data_long <- data_video_games_processed %>%
-  select(Pretest_PANAS_Negative, Posttest_PANAS_Negative) %>%
-  pivot_longer(cols = c(Pretest_PANAS_Negative, Posttest_PANAS_Negative),
-               names_to = "Test_Type",
-               values_to = "Score")
-
-mean_values_negative <- Negative_data_long %>%
-  group_by(Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-# Positive Data Processing
-Positive_data_long <- data_video_games_processed %>%
-  select(Pretest_PANAS_Positive, Posttest_PANAS_Positive) %>%
-  pivot_longer(cols = c(Pretest_PANAS_Positive, Posttest_PANAS_Positive),
-               names_to = "Test_Type",
-               values_to = "Score")
-
-mean_values_positive <- Positive_data_long %>%
-  group_by(Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-# Create Plots
-Plot_Negative <- create_plot(Negative_data_long, mean_values_negative, 
-                             "Distribution of Negative Scores Before and After Exposure",
-                             "Score Range", c("Pretest", "Posttest"))
-
-Plot_Positive <- create_plot(Positive_data_long, mean_values_positive,
-                             "Distribution of Positive Scores Before and After Exposure",
-                             "Score Range", c("Pretest", "Posttest"))
-
-# Combine Plots
-Combined_data_long <- bind_rows(mutate(Negative_data_long, Test_Group = "Negative"),
-                                mutate(Positive_data_long, Test_Group = "Positive"))
-
-mean_values_combined <- Combined_data_long %>%
-  group_by(Test_Group, Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-Combined_Plot <- ggplot(Combined_data_long,
-                        aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-  geom_text(data = mean_values_combined,
-            aes(x = Test_Type, y = max(Combined_data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-            position = position_dodge(width = 0.75),
-            vjust = -0.5,
-            size = 3,
-            show.legend = FALSE,
-            inherit.aes = FALSE) +
-  labs(title = "Distribution of Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest",
-       x = NULL,
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 50)) +
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  theme_minimal() +
-  guides(fill = FALSE, color = FALSE) +
-  scale_x_discrete(labels = c("Negative", "Positive")) +
-  facet_wrap(~Test_Type, scales = "free_y", ncol = 1)
-
-# Display the plots
-print(Plot_Negative)
 print(Plot_Positive)
-print(Combined_Plot)
 
-```
-
-```{r}
-# Set a common theme for all plots
-common_theme <- theme_minimal() +
-  theme(legend.position = "none")   # Remove legends
-
-# Create larger plots for Negative and Positive separately
-Plot_Negative <- create_plot(Negative_data_long, mean_values_negative, 
-                             "Distribution of Negative Scores Before and After Exposure",
-                             "Score Range", c("Pretest", "Posttest")) +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"))  # Adjust plot margins
-
-Plot_Positive <- create_plot(Positive_data_long, mean_values_positive,
-                             "Distribution of Positive Scores Before and After Exposure",
-                             "Score Range", c("Pretest", "Posttest")) +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"))  # Adjust plot margins
-
-# Combine Plots
-
-Combined_data_long <- bind_rows(mutate(Negative_data_long, Test_Group = "Negative"),
-                                mutate(Positive_data_long, Test_Group = "Positive"))
-
-mean_values_combined <- Combined_data_long %>%
-  group_by(Test_Group, Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
 
 Combined_Plot <- ggplot(Combined_data_long,
                         aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
@@ -372,181 +250,27 @@ Combined_Plot <- ggplot(Combined_data_long,
        subtitle = "Comparing Pre- and Posttest",
        x = NULL,
        y = "Score Range") +
-  coord_cartesian(ylim = c(0, 60)) +  # Adjusted y-axis limit for better visibility
+  coord_cartesian(ylim = c(0, 60)) +  #Remove the 60 later only left it in because of the mean that is not shown otherwhise
   scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
   scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
   common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  # Adjust plot margins
-        strip.text = element_text(size = 10))  # Adjust strip text size
+  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  #for prettier borders (Abstand des Plots)
+        strip.text = element_text(size = 10)) +
+  scale_x_discrete(labels = c("Pretest_Negative", "Posttest_Negative", "Pretest_Positive", "Posttest_Positive"))
 
-# Display the larger plots
-print(Plot_Negative)
-print(Plot_Positive)
-# Display the combined plot
 print(Combined_Plot)
 
 ```
+###Trying to find a way putting the mean values as a legend
+TODO: 
+- Find a way to include the mean values better (preferably legend)
+- Modify the distance from Score Range it is really close to y axis 
+- Probably check whether this is APA worthy ?? 
+- Make several chunks one for Negative, one for Positive and one for the combined 
 
 ```{r}
-# Set a common theme for all plots
-common_theme <- theme_minimal() +
-  theme(legend.position = "none")   # Remove legends
-
-# Create larger plots for Negative and Positive separately
-Plot_Negative <- create_plot(Negative_data_long, mean_values_negative, 
-                             "Distribution of Negative Scores Before and After Exposure",
-                             "Score Range", c("Pretest", "Posttest")) +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"))  # Adjust plot margins
-
-Plot_Positive <- create_plot(Positive_data_long, mean_values_positive,
-                             "Distribution of Positive Scores Before and After Exposure",
-                             "Score Range", c("Pretest", "Posttest")) +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"))  # Adjust plot margins
-
-# Create a Combined Plot for Negative Data
-Combined_Negative_data_long <- mutate(Negative_data_long, Test_Group = "Negative")
-
-mean_values_combined_negative <- Combined_Negative_data_long %>%
-  group_by(Test_Group, Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-Combined_Negative_Plot <- ggplot(Combined_Negative_data_long,
-                                 aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-  geom_text(data = mean_values_combined_negative,
-            aes(x = Test_Type, y = max(Combined_Negative_data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-            position = position_dodge(width = 0.75),
-            vjust = -0.5,
-            size = 6,
-            show.legend = FALSE,
-            inherit.aes = FALSE,
-            color = "darkred",
-            fontface = "bold") +
-  labs(title = "Distribution of Negative Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest",
-       x = NULL,
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 60)) +  # Adjusted y-axis limit for better visibility
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  # Adjust plot margins
-        strip.text = element_text(size = 10))  # Adjust strip text size
-
-# Create a Combined Plot for Positive Data
-Combined_Positive_data_long <- mutate(Positive_data_long, Test_Group = "Positive")
-
-mean_values_combined_positive <- Combined_Positive_data_long %>%
-  group_by(Test_Group, Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-Combined_Positive_Plot <- ggplot(Combined_Positive_data_long,
-                                 aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-  geom_text(data = mean_values_combined_positive,
-            aes(x = Test_Type, y = max(Combined_Positive_data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-            position = position_dodge(width = 0.75),
-            vjust = -0.5,
-            size = 6,
-            show.legend = FALSE,
-            inherit.aes = FALSE,
-            color = "darkred",
-            fontface = "bold") +
-  labs(title = "Distribution of Positive Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest",
-       x = NULL,
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 60)) +  # Adjusted y-axis limit for better visibility
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  # Adjust plot margins
-        strip.text = element_text(size = 10))  # Adjust strip text size
-
-# Display the larger plots
-print(Plot_Negative)
-print(Plot_Positive)
-# Display the combined plots
-print(Combined_Negative_Plot)
-print(Combined_Positive_Plot)
-
-```
 
 
-```{r}
-# Combine Plots for Negative Data
-Combined_Negative_data_long <- bind_rows(
-  mutate(Negative_data_long, Test_Group = "Negative")
-)
-
-mean_values_combined_negative <- Combined_Negative_data_long %>%
-  group_by(Test_Group, Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-Combined_Negative_Plot <- ggplot(Combined_Negative_data_long,
-                                aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-  geom_text(data = mean_values_combined_negative,
-            aes(x = Test_Type, y = max(Combined_Negative_data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-            position = position_dodge(width = 0.75),
-            vjust = -0.5,
-            size = 6,
-            show.legend = FALSE,
-            inherit.aes = FALSE,
-            color = "darkred",
-            fontface = "bold") +
-  labs(title = "Distribution of Negative Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest",
-       x = NULL,
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 60)) +  # Adjusted y-axis limit for better visibility
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  # Adjust plot margins
-        strip.text = element_text(size = 10))  # Adjust strip text size
-
-# Combine Plots for Positive Data
-Combined_Positive_data_long <- bind_rows(
-  mutate(Positive_data_long, Test_Group = "Positive")
-)
-
-mean_values_combined_positive <- Combined_Positive_data_long %>%
-  group_by(Test_Group, Test_Type) %>%
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-Combined_Positive_Plot <- ggplot(Combined_Positive_data_long,
-                                aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-  geom_text(data = mean_values_combined_positive,
-            aes(x = Test_Type, y = max(Combined_Positive_data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-            position = position_dodge(width = 0.75),
-            vjust = -0.5,
-            size = 6,
-            show.legend = FALSE,
-            inherit.aes = FALSE,
-            color = "darkred",
-            fontface = "bold") +
-  labs(title = "Distribution of Positive Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest",
-       x = NULL,
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 60)) +  # Adjusted y-axis limit for better visibility
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  # Adjust plot margins
-        strip.text = element_text(size = 10))  # Adjust strip text size
-
-# Display the combined plots
-print(Combined_Negative_Plot)
-print(Combined_Positive_Plot)
 
 ```
 

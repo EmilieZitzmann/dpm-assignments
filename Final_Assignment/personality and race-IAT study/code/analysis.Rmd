@@ -2,7 +2,7 @@
 title: "Examining the relationship between the big-5 personality facets and implicit racial attitudes"
 subtitle: "Analysis"
 author: "Template: Ian Hussey, content: Emilie"
-date: "2024-01-10"
+date: "2024-01-14"
 output:
   html_document:
     code_folding: hide
@@ -793,7 +793,7 @@ print(combined_plot)
 
 ```{r}
 
-ggsave(filename = "combined_plot_Final_Assignment.png", plot = combined_plot, path = "../communications", width = 12, height = 8, bg = "white") #Set the background for the title as otherwhise it goes black
+ggsave(filename = "combined_plot_Final_Assignment.png", plot = combined_plot, path = "../communications", width = 12, height = 8, bg = "white") #Set the background for the title as otherwise it goes black
 
 ggsave(filename = "combined_plot_Final_Assignment.pdf", plot = combined_plot, path = "../communications", width = 12, height = 8)
 

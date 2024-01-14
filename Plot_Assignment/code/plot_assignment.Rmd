@@ -79,9 +79,9 @@ write_csv(data_video_games_processed, "../data/processed/data_video_games_proces
 
 The PANAS (Positive and Negative Affect Schedule) is a questionnaire that is widely used to measure mood or emotions. It is based on a 5-point Likert scale measuring the positive or negative affect on a total score ranging between 10 and 50. The higher scores on the positive scale represent a more positive affect and the higher sores on the negative scale represent a more negative affect. A comparison of the mean values between the positive and negative scales both before and after the respective exposure is graphically displayed. This allows to recognize as to whether the exposure influences the affective states within the test subjects. It is important that the experimental and control groups are separated in order to assess whether and to what extent the different exposures exert an effect. Given that the median is shown within the boxplot instead of the mean, a point is inserted into the plot to represent the average score. 
 
-#Good Plots 
+# Good Plots 
 
-## Positive 
+## PANAS Positive 
 ```{r}
 
 #Create a df 
@@ -153,7 +153,7 @@ print(Plot_Positive)
 
 ```
 
-## Negative 
+## PANAS Negative 
 ```{r}
 
 #Create a df 
@@ -235,7 +235,7 @@ print(Plot_Negative)
 - The groups are displayed next to each other, which allows a direct comparison of each group with itself, and simultaneously with the other group. This way, each group can be analyzed individually or combined.
 - Both plots are laid out in the same way, allowing them to be easily used for comparison. 
 - the legend is clearly marked in different colors to provide a quick overview. Furthermore, unnecessary axis labels or too much information are avoided in order to keep only necessary information within the plot. 
-- title and subtitle indicate clearly what is to be shown graphically. 
+- Title and subtitle indicate clearly what is to be shown graphically. 
 - The y axis is adjusted to the PANAS maximum score so that superfluous spacing can be reduced. 
 - The choice of colors, aesthetics and distances are set in such a way that a clear overall picture with sufficient spacing is created.
 
@@ -293,8 +293,8 @@ print(Bad_Plot)
 
 
 ```
-## Why is this a bad plot? 
 
+## Why is this a bad plot? 
 - It is not obvious what the plot actually wants to express. The information that should emerge and the way in which it should be understood cannot simply follow. 
 - The research interest is not represented, as although both groups are listed, the mean value is not adequately included due to the missing interaction() at x. What exactly the mean can illustrate is unclear.
 - The boxplot is not so suitable for providing a statistical overview, therefore it is not particularly informative in this case. 
@@ -306,21 +306,16 @@ print(Bad_Plot)
 
 # Write to disk
 
-Write to disk as a .pdf or .png.
-
-Name them "plot_good_[yourname]" and "plot_bad_[yourname]".
-
 ```{r}
+
 #Positive Plot
-ggsave(filename = "Positive_Plot_Good_Emilie.pdf", plot = Plot_Positive, path = "../communications", width = 12, height = 8)
+ggsave(filename = "Good_Plot_Positive_PANAS_Emilie.pdf", plot = Plot_Positive, path = "../communications", width = 12, height = 8)
 
 #Negative Plot
-ggsave(filename = "Negative_Plot_Good_Emilie.pdf", plot = Plot_Negative, path = "../communications", width = 12, height = 8)
+ggsave(filename = "Good_Plot_Negative_PANAS_Emilie.pdf", plot = Plot_Negative, path = "../communications", width = 12, height = 8)
 
 #Bad Plot
-
 ggsave(filename = "Bad_Plot_Emilie.pdf", plot = Bad_Plot, path = "../communications", width = 12, height = 8)
-
 
 ```
 

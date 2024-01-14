@@ -1,12 +1,12 @@
 ---
 title: "Plot assignment"
 author: "Template: Ian Hussey; content: Emilie"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: "2024-01-14"
 output:
   html_document:
     code_folding: hide
     highlight: haddock
-    theme: flatly
+    theme: cerulean
     toc: yes
     toc_float: yes
 ---
@@ -17,22 +17,14 @@ knitr::opts_chunk$set(message = FALSE,
 
 ```
 
-Tell him what we want to do with the good plot and what it shows, in the bad plot we don't turn the alpha value low, we use bad colors, that don't help the lines stand outt, clearly not distinct colors, communicate what we did to make the bad plot confusing and the good plot good --> we should get what a good plot is all about and add layers --> produce a reproduceable plot, the data can be made up if we choose, we can use rnorm as in the file, we can put data in an excel frame, real data from open science, no restrictions on what the data is --> it does not matter. The plot should be reproduceable, it should be evident that we got what a good plot is about and what not, the story of the data should be told correctly --> it does not have to make sense.
-The plot should not be too basic, barplot no, but also it should not be a plot that nobody uses --> Raincloud plots are good and really informative, people actually use them --> Balance between looking nice and being useful and filled with information --> Plots in publications are a bit simpler than the ones in infographics, we can also imitate one that was in an infographic or in a blog, data is beautiful is NOT a good source (be careful with it, the choice sometimes is not too great).
-
-Return the data, the code, either png or pdf file of the plot --> final assignment, try citing source if not too much (the book from Lisa for example) 1x each, the plots don't have to be the same but they should have some correspondance (both of the plot should try to explain the same thing --> Raincloud does it well and pie chart not for example)
-
-
-
-
 # Dependencies
 
 ```{r}
 
 library(tidyverse)
+library(ggplot2)
 
 ```
-
 
 # Get Data 
 
@@ -83,205 +75,234 @@ write_csv(data_video_games_processed, "../data/processed/data_video_games_proces
 
 ```
 
-# Analysis of the Dataset
+# Good Plot 
 
-The PANAS (Positive and Negative Affect Schedule) is a questionnaire that is widely used to measure mood or emotions. It is based on a 5-point Likert scale measuring the positive or negative affect on a total score ranging between 10 and 50. The higher scores on the positive scale represent a more positive affect and the higher sores on the negative scale represent a more negative affect. Ein Mittelwertsvergleich zwischen den positiven und negativen Skalen jeweils vor und nach der Exposittion wird graphisch dargestellt, um zu erkennen, ob die Exposition einen Einfluss auf die affektiven Zustände innerhalb der Versuchspersonen nimmt. Wichtig ist, dass dabei die Experimental- und Kontrollgruppe getrennt werden, um so auch zu sehen, ob und inwiefern sich die unterschiedlichen Expositionen auswirken. 
+The PANAS (Positive and Negative Affect Schedule) is a questionnaire that is widely used to measure mood or emotions. It is based on a 5-point Likert scale measuring the positive or negative affect on a total score ranging between 10 and 50. The higher scores on the positive scale represent a more positive affect and the higher sores on the negative scale represent a more negative affect. A comparison of the mean values between the positive and negative scales both before and after the respective exposure is graphically displayed. This allows to recognize as to whether the exposure influences the affective states within the test subjects. It is important that the experimental and control groups are separated in order to assess whether and to what extent the different exposures exert an effect. Given that the median is shown within the boxplot instead of the mean, a point is inserted into the plot to represent the average score. 
 
-A mean comparison between the positive and negative scales before and after the exposure is shown graphically in order to recognize whether the exposure has an influence on the affective states within the test subjects. It is important that the experimental and control groups are separated in order to see whether and to what extent the different exposures have an effect
-
-
-# Instructions
-
-The goal of this exercise is to produce both good and bad examples of plots *and to be explicit about what makes them good or bad*. 
-
-The data can be real or fabricated. The plots can convey realistic or silly messages - but they must convey them clearly. You can get real data from many sources. A good one is the open science framekwork (osf.io). You can also simply make up data, either by hand or using simulation functions (e.g., `rnorm`) or the many simulation packages. If simulating data, ensure that you (a) use set.seed() to make it reproudbile, and (b) save a copy of the final data that you're using to disk and then reload it in the script so that the plot is reproducible.
-
-The goal is neither to reproduce the types of plots that you most often see in journals (bar plots, etc.) nor to use a very fancy looking plot just for the sake of it - if it is very unlikely that you'd ever be able to use the plot to convey a research finding in an article, blog, poster, tweet, infographic or otherwise, it's probably not a good choice either.
-
-The plots must be reproducible. Provide the data as well as the code to reporduce them. The plots should also be saved as individual images (pdf or png).
-
-Under each plot, here in the RMarkdown, briefly explain what types of analysis the plot is suitable for, what elements of the results the plot attempts to clearly convey. For the bad plot, do the opposite: emphasise what features of the results the plot obscures or makes unclear. In doing so, communicate to me that you understand what makes a good plot to convey the results of quantiative analyses to viewers.
-
-Consider making use of the many extensions to ggplot2, e.g.: Good sources ( see if we can integrate them)
-
-- https://r-graph-gallery.com
-- https://krzjoa.github.io/awesome-r-dataviz/#/
-- ggdist https://mjskay.github.io/ggdist/
-- ggrepel
-- ggpubr
-- see
-- ggsignif
-- and others: https://exts.ggplot2.tidyverse.org/gallery/
-
-# Plot 
-
-```{r}
-
-## Negative Data
-Negative_Data <- data_video_games_processed |>
-  select(Pretest_PANAS_Negative, Posttest_PANAS_Negative)
-
-Negative_data_long <- Negative_Data |>
-  pivot_longer(cols = c(Pretest_PANAS_Negative, Posttest_PANAS_Negative),
-               names_to = "Test_Type",
-               values_to = "Score")
-
-## Positive Data
-Positive_Data <- data_video_games_processed |>
-  select(Pretest_PANAS_Positive, Posttest_PANAS_Positive)
-
-Positive_data_long <- Positive_Data |>
-  pivot_longer(cols = c(Pretest_PANAS_Positive, Posttest_PANAS_Positive),
-               names_to = "Test_Type",
-               values_to = "Score")
-
-# Set the order for the plots according to Test_Type
-
-## Negative
-Negative_data_long$Test_Type <- factor(Negative_data_long$Test_Type, levels = c("Pretest_PANAS_Negative", 
-                                                                                "Posttest_PANAS_Negative"))
+#Good Plots 
 
 ## Positive 
+```{r}
+
+#Create a df 
+Positive_data_long <- data_video_games_processed |>
+  select(group, Pretest_PANAS_Positive, Posttest_PANAS_Positive) |>
+  pivot_longer(cols = c(Pretest_PANAS_Positive, Posttest_PANAS_Positive),
+               names_to = "Test_Type",
+               values_to = "Positive_Score")
+
+# Manually calculating the mean values
+mean_values_positive <- Positive_data_long |>
+  group_by(group, Test_Type) |>
+  summarise(Positive_mean_score = round(mean(Positive_Score, na.rm = TRUE), digits = 2), .groups = "drop") #Drop the grouping in order to have no warning when plotting the data later. 
+
+
+# Set the dodge width in order to prevent overlapping and control the space between the Pre- and Posttest within plot
+dodge_width <- 0.8
+
+#In vizualisation we want to have pretest before posttest, which is why we explicitly set this 
 Positive_data_long$Test_Type <- factor(Positive_data_long$Test_Type, levels = c("Pretest_PANAS_Positive", 
                                                                                 "Posttest_PANAS_Positive"))
 
-# Calculate the mean values to include them within the plot to make the mean more visible 
-
-## Negative 
-mean_values_negative <- Negative_data_long |>
-  group_by(Test_Type) |>
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-## Positive 
-mean_values_positive <- Positive_data_long |>
-  group_by(Test_Type) |>
-  summarise(mean_score = mean(Score, na.rm = TRUE))
-
-# Create the plot
-Plot_Negative <- ggplot(Negative_data_long,
-                        aes(x = Test_Type, 
-                            y = Score, 
-                            fill = Test_Type, 
-                            color = Test_Type)) +
-  geom_violin(trim = FALSE, 
-              alpha = 0.5) +
-  geom_boxplot(width = 0.2, 
-               alpha = 0.6, 
-               color = "black", 
-               outlier.shape = 16, 
-               outlier.color = "red") +
-  geom_text(data = mean_values_negative, 
-            aes(x = Test_Type, 
-                y = max(Negative_data_long$Score) + 5, 
-                label = sprintf("%.2f",
-                                mean_score)),
-            position = position_dodge(width = 0.75), 
-            vjust = -0.5, 
-            size = 3, 
-            show.legend = FALSE, 
-            inherit.aes = FALSE) +
-  labs(title = "Distribution of Negative Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest", 
-       x = NULL, #Remove the x-Axis Label as it provides no additional information 
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 50)) +  # Set y-axis limit up to 50, since PANAS max is 50 
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
-  theme_minimal()+
-  guides(fill = FALSE, color = FALSE) + #Remove legend
-  scale_x_discrete(labels = c("Pretest", "Posttest")) #Modify x-Axis labels 
-
-# Display the plot
-print(Plot_Negative)
-
-
-# Create the plot for Positive Data
+#Create a plot
 Plot_Positive <- ggplot(Positive_data_long,
-                        aes(x = Test_Type, 
-                            y = Score, 
+                        aes(x = interaction(group, Test_Type), #In order to be able to include both informations in the plot we have to set an interaction.
+                            y = Positive_Score, 
                             fill = Test_Type, 
                             color = Test_Type)) +
   geom_violin(trim = FALSE, 
-              alpha = 0.5) +
-  geom_boxplot(width = 0.2, 
-               alpha = 0.6, 
+              alpha = 0.2) + #include violin distribution
+  geom_boxplot(width = 0.2,
+               size = 0.4,
+               alpha = 0.8, 
                color = "black", 
                outlier.shape = 16, 
-               outlier.color = "red") +
-  geom_text(data = mean_values_positive, 
-            aes(x = Test_Type, 
-                y = max(Positive_data_long$Score) + 5, 
-                label = sprintf("%.2f",
-                                mean_score)),
-            position = position_dodge(width = 0.75), 
-            vjust = -0.5, 
-            size = 3, 
-            show.legend = FALSE, 
-            inherit.aes = FALSE) +
-  labs(title = "Distribution of Positive Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest", 
-       x = NULL, 
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 50)) + 
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Type") +
+               outlier.color = "red",
+               position = position_dodge(width = dodge_width)) + #put the boxplot within the violin 
+  stat_summary(fun = mean, # since we are interested in the mean values we include them as a black dot within the plot
+               geom = "point",
+               color = "black",
+               size = 1.5,
+               position = position_dodge(width = dodge_width))  +
+  labs(title = "Comparison of Mean Positive Scores Before and After Exposure", #Set title and undertitle 
+       subtitle = "Distinguished by Control and Experimental Group", 
+       x = NULL, #No further information provided which is why we leave it out
+       y = "Total PANAS Score") +
+  coord_cartesian(ylim = c(0, 50)) +
+  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Mean Values", labels = c("Pretest", "Posttest")) + #set the colors
+  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Mean Values", labels = c("Pretest", "Posttest")) + 
   theme_minimal() +
-  guides(fill = FALSE, color = FALSE) + 
-  scale_x_discrete(labels = c("Pretest", "Posttest")) 
-
+  guides(fill = guide_legend(override.aes = list(color = c("#4C72B0", "#DD8452"))), #Create the legends adjusted to the colors
+         color = FALSE) +
+  facet_wrap(~group, scales = "free_x",  #Put the labels control group and experimental group under the graphs
+             ncol = 2,
+             switch= "x") +
+  theme(text = element_text(size = 12), #Adjust the plot overall appearance with margins and texts 
+        legend.position = "right",  
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        axis.title.y = element_text(size = 12, margin = margin(0, 20, 0, 0)),
+        plot.title = element_text(size = 15, hjust = 0, margin = margin(b = 5), face = "bold"),
+        plot.subtitle = element_text(size = 13, margin = margin(b = 10)),
+        plot.title.position = "plot",
+        plot.margin = margin(20, 20, 20, 20),
+        axis.text.x = element_blank())  # Remove x labels as they provide no further information
 
 print(Plot_Positive)
 
-
-Combined_Plot <- ggplot(Combined_data_long,
-                        aes(x = Test_Type, y = Score, fill = Test_Group, color = Test_Group)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.6, color = "black", outlier.shape = 16, outlier.color = "red") +
-  geom_text(data = mean_values_combined,
-            aes(x = Test_Type, y = max(Combined_data_long$Score) + 5, label = sprintf("%.2f", mean_score)),
-            position = position_dodge(width = 0.75),
-            vjust = -0.5,
-            size = 6,
-            show.legend = FALSE,
-            inherit.aes = FALSE,
-            color = "darkred",
-            fontface = "bold") +
-  labs(title = "Distribution of Scores Before and After Exposure",
-       subtitle = "Comparing Pre- and Posttest",
-       x = NULL,
-       y = "Score Range") +
-  coord_cartesian(ylim = c(0, 60)) +  #Remove the 60 later only left it in because of the mean that is not shown otherwhise
-  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Test Group") +
-  common_theme +
-  theme(plot.margin = margin(1, 1, 1, 1, "cm"),  #for prettier borders (Abstand des Plots)
-        strip.text = element_text(size = 10)) +
-  scale_x_discrete(labels = c("Pretest_Negative", "Posttest_Negative", "Pretest_Positive", "Posttest_Positive"))
-
-print(Combined_Plot)
-
 ```
-###Trying to find a way putting the mean values as a legend
-TODO: 
-- Find a way to include the mean values better (preferably legend)
-- Modify the distance from Score Range it is really close to y axis 
-- Probably check whether this is APA worthy ?? 
-- Make several chunks one for Negative, one for Positive and one for the combined 
 
+## Negative 
 ```{r}
 
+#Create a df 
+
+Plot_Negative <- 
+Negative_data_long <- data_video_games_processed |>
+  select(group, Pretest_PANAS_Negative, Posttest_PANAS_Negative) |>
+  pivot_longer(cols = c(Pretest_PANAS_Negative, Posttest_PANAS_Negative),
+               names_to = "Test_Type",
+               values_to = "Negative_Score")
+
+# Manually calculating the mean values
+mean_values_negative <- Negative_data_long |>
+  group_by(group, Test_Type) |>
+  summarise(Negative_mean_score = round(mean(Negative_Score, na.rm = TRUE), digits = 2), .groups = "drop")
+
+# Set the dodge width to prevent overlapping and control the space between the Pre- and Posttest within the plot
+dodge_width <- 0.8
+
+# In visualization, we want to have pretest before posttest, which is why we explicitly set this 
+Negative_data_long$Test_Type <- factor(Negative_data_long$Test_Type, levels = c("Pretest_PANAS_Negative", 
+                                                                                "Posttest_PANAS_Negative"))
+
+# Create a plot. As it is the same plot as above just for the negative data there is no further information provided within the code here. 
+Plot_Negative <- ggplot(Negative_data_long,
+                        aes(x = interaction(group, Test_Type),
+                            y = Negative_Score, 
+                            fill = Test_Type, 
+                            color = Test_Type)) +
+  geom_violin(trim = FALSE, 
+              alpha = 0.2) +
+  geom_boxplot(width = 0.2,
+               size = 0.4,
+               alpha = 0.8, 
+               color = "black", 
+               outlier.shape = 16, 
+               outlier.color = "red",
+               position = position_dodge(width = dodge_width)) +
+  stat_summary(fun = mean, 
+               geom = "point",
+               color = "black",
+               size = 1.5,
+               position = position_dodge(width = dodge_width))  +
+  labs(title = element_text("Comparison of Mean Negative Scores Before and After Exposure", face = "bold"),
+       subtitle = "Distinguished by Control and Experimental Group", 
+       x = NULL,
+       y = "Total PANAS Score") +
+  coord_cartesian(ylim = c(0, 50)) +
+  scale_fill_manual(values = c("#4C72B0", "#DD8452"), name = "Mean Values", labels = c("Pretest", "Posttest")) +
+  scale_color_manual(values = c("#4C72B0", "#DD8452"), name = "Mean Values", labels = c("Pretest", "Posttest")) + 
+  theme_minimal() +
+  guides(fill = guide_legend(override.aes = list(color = c("#4C72B0", "#DD8452"))),
+         color = FALSE) +  
+  facet_wrap(~group, scales = "free_x", 
+             ncol = 2,
+             switch= "x") +
+  theme(text = element_text(size = 12),
+        legend.position = "right",  
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        axis.title.y = element_text(size = 12, margin = margin(0, 20, 0, 0)),
+        plot.title = element_text(size = 15, hjust = 0, margin = margin(b = 5), face = "bold"),
+        plot.subtitle = element_text(size = 13, margin = margin(b = 10)),
+        plot.title.position = "plot",
+        plot.margin = margin(20, 20, 20, 20),
+        axis.text.x = element_blank())  
+
+print(Plot_Negative)
 
 
 ```
 
+## Why are these good plots? 
+
+- The plots are clear and easy to read, unnecessary information is omitted and only the meaningful elements are referred to, thereby avoiding overplotting.
+- The quality of the plots reflects the research interest, they clearly show the differences in the mean value and the distribution of the scores between the measurement points. 
+- A combination of boxplot, violin plot and illustration of the mean value is a good way of quickly gaining a statistical overview. 
+- The groups are displayed next to each other, which allows a direct comparison of each group with itself, and simultaneously with the other group. This way, each group can be analyzed individually or combined.
+- Both plots are laid out in the same way, allowing them to be easily used for comparison. 
+- the legend is clearly marked in different colors to provide a quick overview. Furthermore, unnecessary axis labels or too much information are avoided in order to keep only necessary information within the plot. 
+- title and subtitle indicate clearly what is to be shown graphically. 
+- The y axis is adjusted to the PANAS maximum score so that superfluous spacing can be reduced. 
+- The choice of colors, aesthetics and distances are set in such a way that a clear overall picture with sufficient spacing is created.
 
 # Bad plot
 
 ```{r}
 
+Bad_Plot <- ggplot(data_video_games_processed, 
+                   aes(x = group, 
+                       y = Pretest_PANAS_Positive, 
+                       fill = "Pretest")) + #Plot two bar plots for each group but does not plot the Pre- and Posttests separately.
+  geom_bar(stat = "identity", 
+           position = "dodge", 
+           width = 0.7, 
+           color = "black", 
+           alpha = 0.3) +  
+  geom_bar(stat = "identity",  #Bar for Posttest 
+           aes(x = group, 
+               y = Posttest_PANAS_Positive, 
+               fill = "Posttest"), 
+           position = "dodge", 
+           width = 0.7, 
+           color = "black", 
+           alpha = 0.3) + 
+   geom_point(aes(x = group, #Trying to include the mean 
+                 y = Posttest_PANAS_Positive, 
+                 color = "Mean"), 
+             position = position_dodge(width = 0.7), 
+             size = 2, alpha = 0.3, 
+             shape = 2) +
+  geom_point(aes(x = group, #Mean inclusion for posttest
+                 y = Pretest_PANAS_Positive, 
+                 color = "Mean"), 
+             position = position_dodge(width = 0.7), 
+             size = 2, alpha = 0.3, 
+             shape = 2) +  
+  geom_text(aes(x = group, #Adds a fixed label to the top that does not provide any further information
+                y = 70,
+                label = "Test Type"),  
+            position = position_dodge(width = 0.7), 
+            size = 2, 
+            alpha = 0.3, 
+            color = "blue") +  
+  labs(x = "Groups", #Add overall plot labels that do not provide clear information
+       y = "Scale",
+       color = "Mean",
+       fill = "Tettype") +
+  theme_minimal() +
+  theme(legend.position = c(0.2, 0.8),  #Legend position
+        legend.title = element_text(face = "italic", size = 6),  
+        axis.title = element_text(size = 6, color = "red"),  
+        axis.text = element_text(size = 6, color = "green"))
+
+print(Bad_Plot)
 
 
 ```
+## Why is this a bad plot? 
+
+- It is not obvious what the plot actually wants to express. The information that should emerge and the way in which it should be understood cannot simply follow. 
+- The research interest is not represented, as although both groups are listed, the mean value is not adequately included due to the missing interaction() at x. What exactly the mean can illustrate is unclear.
+- The boxplot is not so suitable for providing a statistical overview, therefore it is not particularly informative in this case. 
+- As the groups are not shown according to pre-test and post-test, it is not apparent to what extent they differ.
+- Colors and labels are poorly chosen, with the color of the mean value being the same as that of the boxplot, making it even more cluttered. 
+- The axes are not clearly labeled nor are their values justified, the y-axis shows a level of 70, which is not really justifiable visually or through the scale. 
+- The font size is also too small and there is no title.
+- Fundamentally, this plot shows that a totally different plot is created using these same data elements. This plot is inferior as it offers little overview, does not adequately incorporate the mean values and cannot clearly depict the research interest. 
 
 # Write to disk
 
@@ -290,7 +311,15 @@ Write to disk as a .pdf or .png.
 Name them "plot_good_[yourname]" and "plot_bad_[yourname]".
 
 ```{r}
+#Positive Plot
+ggsave(filename = "Positive_Plot_Good_Emilie.pdf", plot = Plot_Positive, path = "../communications", width = 12, height = 8)
 
+#Negative Plot
+ggsave(filename = "Negative_Plot_Good_Emilie.pdf", plot = Plot_Negative, path = "../communications", width = 12, height = 8)
+
+#Bad Plot
+
+ggsave(filename = "Bad_Plot_Emilie.pdf", plot = Bad_Plot, path = "../communications", width = 12, height = 8)
 
 
 ```
